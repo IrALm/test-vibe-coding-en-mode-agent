@@ -1,0 +1,626 @@
+{
+	"info": {
+		"_postman_id": "b7c1a5b0-4e2a-4c8b-9a3d-0f6a1c2d3e4f",
+		"name": "compta - ERP OHADA multi-tenant",
+		"description": "Collection Postman du projet compta (ERP OHADA multi-tenant). Chaque dossier correspond à un module/domaine du backend Spring Boot (package com.walsia.compta).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Tenants Admin",
+			"description": "Endpoints d'administration de l'annuaire des tenants (com.walsia.compta.tenant.admin.TenantAdminController). Réservés au rôle SUPER_ADMIN et strictement à l'issuer du realm admin Keycloak (compta.keycloak.admin-realm) : un token émis par un realm tenant, même avec le rôle SUPER_ADMIN, est rejeté.",
+			"item": [
+				{
+					"name": "Créer un tenant",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"École LAPEREAUX\",\n  \"clientType\": \"ECOLE\",\n  \"keycloakRealm\": \"lapereaux\",\n  \"dbName\": \"compta_lapereaux\",\n  \"dbHost\": \"localhost\",\n  \"dbPort\": 5432,\n  \"dbUsername\": \"compta_lapereaux_user\",\n  \"dbPassword\": \"ChangeMoi!2026\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/tenants",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"tenants"
+							]
+						},
+						"description": "Crée un tenant : persiste l'entrée en statut PROVISIONING, puis provisionne (pool Hikari transitoire + migration Flyway du schéma tenant). Bascule en ACTIVE si succès, en FAILED sinon (voir /retry-migration).\n\nTous les champs sont obligatoires. `keycloakRealm` et `dbName` doivent respecter le format `^[a-z][a-z0-9_-]{2,63}$` et `keycloakRealm` ne peut pas être égal au realm admin configuré (`compta.keycloak.admin-realm`). `clientType` doit être l'une des valeurs ECOLE, HOPITAL, ONG, PME. `dbPort` doit être compris entre 1 et 65535.\n\nLe mot de passe fourni n'est jamais retourné (voir TenantResponse) : il est chiffré avant persistance."
+					},
+					"response": [
+						{
+							"name": "201 Created",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"École LAPEREAUX\",\n  \"clientType\": \"ECOLE\",\n  \"keycloakRealm\": \"lapereaux\",\n  \"dbName\": \"compta_lapereaux\",\n  \"dbHost\": \"localhost\",\n  \"dbPort\": 5432,\n  \"dbUsername\": \"compta_lapereaux_user\",\n  \"dbPassword\": \"ChangeMoi!2026\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/tenants",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"tenants"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 1,\n  \"name\": \"École LAPEREAUX\",\n  \"clientType\": \"ECOLE\",\n  \"keycloakRealm\": \"lapereaux\",\n  \"dbName\": \"compta_lapereaux\",\n  \"status\": \"ACTIVE\",\n  \"createdAt\": \"2026-07-11T09:00:00Z\"\n}"
+						},
+						{
+							"name": "409 Conflict - keycloakRealm/dbName déjà pris",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"École LAPEREAUX\",\n  \"clientType\": \"ECOLE\",\n  \"keycloakRealm\": \"lapereaux\",\n  \"dbName\": \"compta_lapereaux\",\n  \"dbHost\": \"localhost\",\n  \"dbPort\": 5432,\n  \"dbUsername\": \"compta_lapereaux_user\",\n  \"dbPassword\": \"ChangeMoi!2026\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/tenants",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"tenants"
+									]
+								}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/problem+json"
+								}
+							],
+							"body": "{\n  \"type\": \"about:blank\",\n  \"title\": \"Conflict\",\n  \"status\": 409,\n  \"detail\": \"Un tenant existe déjà avec keycloakRealm='lapereaux' ou dbName='compta_lapereaux'\"\n}"
+						},
+						{
+							"name": "422 Unprocessable Entity - échec de provisioning",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"École LAPEREAUX\",\n  \"clientType\": \"ECOLE\",\n  \"keycloakRealm\": \"lapereaux\",\n  \"dbName\": \"compta_lapereaux\",\n  \"dbHost\": \"localhost\",\n  \"dbPort\": 5432,\n  \"dbUsername\": \"compta_lapereaux_user\",\n  \"dbPassword\": \"ChangeMoi!2026\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/tenants",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"tenants"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/problem+json"
+								}
+							],
+							"body": "{\n  \"type\": \"about:blank\",\n  \"title\": \"Unprocessable Entity\",\n  \"status\": 422,\n  \"detail\": \"Échec de connexion ou de migration pour le tenant 'École LAPEREAUX'. Vérifiez que la base et le rôle PostgreSQL ont bien été créés au préalable (voir scripts/bootstrap_postgres.sql).\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Lister les tenants",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/tenants",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"tenants"
+							]
+						},
+						"description": "Retourne l'ensemble des tenants de l'annuaire (aucune pagination ni filtre)."
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/admin/tenants",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"tenants"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "[\n  {\n    \"id\": 1,\n    \"name\": \"École LAPEREAUX\",\n    \"clientType\": \"ECOLE\",\n    \"keycloakRealm\": \"lapereaux\",\n    \"dbName\": \"compta_lapereaux\",\n    \"status\": \"ACTIVE\",\n    \"createdAt\": \"2026-07-11T09:00:00Z\"\n  }\n]"
+						}
+					]
+				},
+				{
+					"name": "Obtenir un tenant par id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/tenants/{{tenantId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"tenants",
+								"{{tenantId}}"
+							]
+						},
+						"description": "Retourne le détail d'un tenant par son id technique."
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/admin/tenants/{{tenantId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"tenants",
+										"{{tenantId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 1,\n  \"name\": \"École LAPEREAUX\",\n  \"clientType\": \"ECOLE\",\n  \"keycloakRealm\": \"lapereaux\",\n  \"dbName\": \"compta_lapereaux\",\n  \"status\": \"ACTIVE\",\n  \"createdAt\": \"2026-07-11T09:00:00Z\"\n}"
+						},
+						{
+							"name": "404 Not Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/admin/tenants/{{tenantId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"tenants",
+										"{{tenantId}}"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/problem+json"
+								}
+							],
+							"body": "{\n  \"type\": \"about:blank\",\n  \"title\": \"Not Found\",\n  \"status\": 404,\n  \"detail\": \"Tenant introuvable (id=999)\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Mettre à jour un tenant (name / rotation dbPassword)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"École LAPEREAUX (renommée)\",\n  \"dbPassword\": \"NouveauMotDePasse!2026\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/tenants/{{tenantId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"tenants",
+								"{{tenantId}}"
+							]
+						},
+						"description": "Mise à jour limitée : seuls `name` et/ou `dbPassword` (rotation du mot de passe de connexion à la base tenant) peuvent être modifiés. `keycloakRealm` et `dbName` ne sont volontairement pas modifiables via cet endpoint. Les deux champs sont optionnels mais, s'ils sont fournis, ne peuvent pas être vides/blancs. En cas de rotation, le pool de connexions du tenant est immédiatement recréé avec le nouveau mot de passe."
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"École LAPEREAUX (renommée)\",\n  \"dbPassword\": \"NouveauMotDePasse!2026\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/tenants/{{tenantId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"tenants",
+										"{{tenantId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 1,\n  \"name\": \"École LAPEREAUX (renommée)\",\n  \"clientType\": \"ECOLE\",\n  \"keycloakRealm\": \"lapereaux\",\n  \"dbName\": \"compta_lapereaux\",\n  \"status\": \"ACTIVE\",\n  \"createdAt\": \"2026-07-11T09:00:00Z\"\n}"
+						},
+						{
+							"name": "404 Not Found",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"École LAPEREAUX (renommée)\",\n  \"dbPassword\": \"NouveauMotDePasse!2026\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/admin/tenants/{{tenantId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"tenants",
+										"{{tenantId}}"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/problem+json"
+								}
+							],
+							"body": "{\n  \"type\": \"about:blank\",\n  \"title\": \"Not Found\",\n  \"status\": 404,\n  \"detail\": \"Tenant introuvable (id=999)\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Relancer la migration d'un tenant FAILED",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/tenants/{{tenantId}}/retry-migration",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"tenants",
+								"{{tenantId}}",
+								"retry-migration"
+							]
+						},
+						"description": "Relance le provisioning (connexion + migration Flyway) d'un tenant actuellement en statut FAILED. Bascule en ACTIVE si succès, reste/repasse en FAILED sinon (422). Retourne 409 si le tenant n'est pas en statut FAILED."
+					},
+					"response": [
+						{
+							"name": "200 OK",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/admin/tenants/{{tenantId}}/retry-migration",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"tenants",
+										"{{tenantId}}",
+										"retry-migration"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"id\": 1,\n  \"name\": \"École LAPEREAUX\",\n  \"clientType\": \"ECOLE\",\n  \"keycloakRealm\": \"lapereaux\",\n  \"dbName\": \"compta_lapereaux\",\n  \"status\": \"ACTIVE\",\n  \"createdAt\": \"2026-07-11T09:00:00Z\"\n}"
+						},
+						{
+							"name": "409 Conflict - tenant pas en statut FAILED",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/admin/tenants/{{tenantId}}/retry-migration",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"tenants",
+										"{{tenantId}}",
+										"retry-migration"
+									]
+								}
+							},
+							"status": "Conflict",
+							"code": 409,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/problem+json"
+								}
+							],
+							"body": "{\n  \"type\": \"about:blank\",\n  \"title\": \"Conflict\",\n  \"status\": 409,\n  \"detail\": \"Seul un tenant en statut FAILED peut être re-migré (statut actuel : ACTIVE)\"\n}"
+						},
+						{
+							"name": "404 Not Found",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/admin/tenants/{{tenantId}}/retry-migration",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"tenants",
+										"{{tenantId}}",
+										"retry-migration"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/problem+json"
+								}
+							],
+							"body": "{\n  \"type\": \"about:blank\",\n  \"title\": \"Not Found\",\n  \"status\": 404,\n  \"detail\": \"Tenant introuvable (id=999)\"\n}"
+						},
+						{
+							"name": "422 Unprocessable Entity - échec de la nouvelle tentative",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{adminToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/admin/tenants/{{tenantId}}/retry-migration",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"admin",
+										"tenants",
+										"{{tenantId}}",
+										"retry-migration"
+									]
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/problem+json"
+								}
+							],
+							"body": "{\n  \"type\": \"about:blank\",\n  \"title\": \"Unprocessable Entity\",\n  \"status\": 422,\n  \"detail\": \"Échec de connexion ou de migration pour le tenant 'École LAPEREAUX'. Vérifiez que la base et le rôle PostgreSQL ont bien été créés au préalable (voir scripts/bootstrap_postgres.sql).\"\n}"
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{adminToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "adminToken",
+			"value": "",
+			"type": "string",
+			"description": "JWT bearer à obtenir manuellement via Keycloak (realm admin, compta.keycloak.admin-realm), pour un utilisateur ayant le rôle SUPER_ADMIN. Doit être émis par le realm admin : un token d'un realm tenant est rejeté même avec ce rôle."
+		},
+		{
+			"key": "tenantId",
+			"value": "1",
+			"type": "string",
+			"description": "Id technique d'un tenant existant, utilisé par les requêtes GET/PATCH/retry-migration ciblant un tenant précis."
+		}
+	]
+}

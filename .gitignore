@@ -1,0 +1,10 @@
+
+# Fichiers d'environnement (secrets) - ne jamais committer
+.env
+!.env.example
+
+# IDE (config locale, pas de code source)
+.idea/
+
+# Config Claude locale (garder .claude/agents/, exclure les reglages locaux)
+.claude/settings.local.json

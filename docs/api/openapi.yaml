@@ -1,0 +1,401 @@
+openapi: 3.1.0
+info:
+  title: Compta API
+  description: >
+    API de l'ERP OHADA multi-tenant "compta" (Spring Boot 4.1.0 / Java 21,
+    package com.walsia.compta). Cette spécification couvre pour l'instant
+    l'API d'administration de l'annuaire des tenants
+    (com.walsia.compta.tenant.admin.TenantAdminController).
+  version: 0.0.1-SNAPSHOT
+servers:
+  - url: http://localhost:8080
+    description: Instance locale de développement
+tags:
+  - name: Tenants Admin
+    description: >
+      Administration de l'annuaire des tenants (provisioning, consultation,
+      mise à jour limitée, relance de migration). Réservé au rôle
+      SUPER_ADMIN authentifié sur le realm Keycloak admin
+      (compta.keycloak.admin-realm) : un jeton portant le rôle SUPER_ADMIN
+      mais émis par un autre realm (ex. un realm tenant) est rejeté
+      (double contrôle rôle + issuer, voir AdminAccessAuthorizationManager).
+paths:
+  /admin/tenants:
+    post:
+      tags:
+        - Tenants Admin
+      operationId: createTenant
+      summary: Créer un nouveau tenant
+      description: >
+        Persiste le tenant en statut PROVISIONING, puis tente hors
+        transaction JPA la connexion à la base tenant et la migration
+        Flyway du schéma. En cas de succès le tenant passe en ACTIVE et est
+        renvoyé ; en cas d'échec (connexion ou migration) le tenant est
+        basculé en FAILED et l'appel répond 422 (relance possible via
+        POST /admin/tenants/{id}/retry-migration).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantCreateRequest'
+      responses:
+        '201':
+          description: Tenant créé et provisionné avec succès (statut ACTIVE).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '400':
+          description: >
+            Requête invalide : champ obligatoire manquant/vide, clientType
+            absent, dbPort hors de la plage 1-65535, ou keycloakRealm/dbName
+            ne respectant pas le format ^[a-z][a-z0-9_-]{2,63}$ (ou égal au
+            realm admin configuré).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Jeton JWT absent ou invalide.
+        '403':
+          description: >
+            Jeton valide mais rôle SUPER_ADMIN manquant, ou issuer différent
+            du realm admin configuré.
+        '409':
+          description: Un tenant existe déjà avec ce keycloakRealm ou ce dbName.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '422':
+          description: >
+            Échec de connexion à la base tenant ou de la migration Flyway ;
+            le tenant est laissé en statut FAILED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+    get:
+      tags:
+        - Tenants Admin
+      operationId: listTenants
+      summary: Lister tous les tenants
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des tenants de l'annuaire.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TenantResponse'
+        '401':
+          description: Jeton JWT absent ou invalide.
+        '403':
+          description: >
+            Jeton valide mais rôle SUPER_ADMIN manquant, ou issuer différent
+            du realm admin configuré.
+  /admin/tenants/{id}:
+    get:
+      tags:
+        - Tenants Admin
+      operationId: getTenantById
+      summary: Récupérer le détail d'un tenant
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Tenant trouvé.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '401':
+          description: Jeton JWT absent ou invalide.
+        '403':
+          description: >
+            Jeton valide mais rôle SUPER_ADMIN manquant, ou issuer différent
+            du realm admin configuré.
+        '404':
+          description: Aucun tenant avec cet id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+    patch:
+      tags:
+        - Tenants Admin
+      operationId: updateTenant
+      summary: Mettre à jour un tenant (nom et/ou rotation du mot de passe)
+      description: >
+        Mise à jour limitée : seuls name et/ou dbPassword (rotation du mot
+        de passe de connexion à la base tenant) sont modifiables.
+        keycloakRealm et dbName ne sont volontairement pas modifiables dans
+        ce lot. Si dbPassword est fourni, le mot de passe est rechiffré et
+        le pool de connexions du tenant est régénéré.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantUpdateRequest'
+      responses:
+        '200':
+          description: Tenant mis à jour.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '400':
+          description: >
+            name fourni vide, ou dbPassword fourni vide (uniquement des
+            espaces) alors qu'une rotation était demandée.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Jeton JWT absent ou invalide.
+        '403':
+          description: >
+            Jeton valide mais rôle SUPER_ADMIN manquant, ou issuer différent
+            du realm admin configuré.
+        '404':
+          description: Aucun tenant avec cet id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+  /admin/tenants/{id}/retry-migration:
+    post:
+      tags:
+        - Tenants Admin
+      operationId: retryTenantMigration
+      summary: Relancer la migration d'un tenant en échec
+      description: >
+        Ne peut être appelé que pour un tenant en statut FAILED ; retente la
+        connexion à la base tenant et la migration Flyway. En cas de succès
+        le tenant repasse en ACTIVE, sinon il reste en FAILED et l'appel
+        répond 422.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Migration relancée avec succès (statut ACTIVE).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '401':
+          description: Jeton JWT absent ou invalide.
+        '403':
+          description: >
+            Jeton valide mais rôle SUPER_ADMIN manquant, ou issuer différent
+            du realm admin configuré.
+        '404':
+          description: Aucun tenant avec cet id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Le tenant n'est pas en statut FAILED (aucune migration à relancer).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '422':
+          description: >
+            Nouvel échec de connexion à la base tenant ou de la migration
+            Flyway ; le tenant reste en statut FAILED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Jeton JWT Keycloak. Pour les endpoints /admin/tenants/**, le jeton
+        doit porter le rôle SUPER_ADMIN ET avoir été émis par le realm admin
+        configuré (compta.keycloak.admin-realm, issuer =
+        {compta.keycloak.base-url}/realms/{admin-realm}) ; un jeton
+        SUPER_ADMIN émis par un autre realm est rejeté (403).
+  schemas:
+    ClientType:
+      type: string
+      description: Type de client (secteur d'activité) d'un tenant de l'ERP OHADA.
+      enum:
+        - ECOLE
+        - HOPITAL
+        - ONG
+        - PME
+    TenantStatus:
+      type: string
+      description: Cycle de vie d'un tenant.
+      enum:
+        - PROVISIONING
+        - ACTIVE
+        - FAILED
+    TenantCreateRequest:
+      type: object
+      description: Requête de création d'un tenant. Tous les champs sont obligatoires.
+      required:
+        - name
+        - clientType
+        - keycloakRealm
+        - dbName
+        - dbHost
+        - dbPort
+        - dbUsername
+        - dbPassword
+      properties:
+        name:
+          type: string
+        clientType:
+          $ref: '#/components/schemas/ClientType'
+        keycloakRealm:
+          type: string
+          pattern: '^[a-z][a-z0-9_-]{2,63}$'
+          description: >
+            Identifiant technique utilisé tel quel comme segment de l'issuer
+            Keycloak. Ne peut pas être égal au realm admin configuré
+            (compta.keycloak.admin-realm).
+        dbName:
+          type: string
+          pattern: '^[a-z][a-z0-9_-]{2,63}$'
+          description: >
+            Identifiant technique utilisé tel quel comme nom de pool Hikari
+            et segment d'URL JDBC.
+        dbHost:
+          type: string
+        dbPort:
+          type: integer
+          minimum: 1
+          maximum: 65535
+        dbUsername:
+          type: string
+        dbPassword:
+          type: string
+          format: password
+          description: >
+            Mot de passe en clair, en entrée uniquement : jamais journalisé
+            ni renvoyé par l'API (chiffré en base via CredentialEncryptor).
+      example:
+        name: École LAPEREAUX
+        clientType: ECOLE
+        keycloakRealm: ecole-lapereaux
+        dbName: ecole_lapereaux
+        dbHost: localhost
+        dbPort: 5432
+        dbUsername: ecole_lapereaux_user
+        dbPassword: change-me
+    TenantUpdateRequest:
+      type: object
+      description: >
+        Requête de mise à jour d'un tenant : uniquement le nom et/ou la
+        rotation du mot de passe de connexion à la base tenant.
+        keycloakRealm et dbName ne sont volontairement pas modifiables. Les
+        deux champs sont optionnels mais, s'ils sont fournis, ne peuvent pas
+        être vides (uniquement des espaces).
+      properties:
+        name:
+          type: string
+        dbPassword:
+          type: string
+          format: password
+          description: >
+            Si fourni (non null, non vide), déclenche la rotation du mot de
+            passe de connexion à la base tenant et la régénération du pool
+            de connexions.
+      example:
+        name: École LAPEREAUX (nouveau nom)
+        dbPassword: null
+    TenantResponse:
+      type: object
+      description: >
+        Représentation exposée d'un tenant. Ne comporte volontairement aucun
+        champ lié aux identifiants de connexion (ni dbPasswordEncrypted, ni
+        dbPassword, ni dbHost, ni dbUsername, ni dbPort).
+      required:
+        - id
+        - name
+        - clientType
+        - keycloakRealm
+        - dbName
+        - status
+        - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        clientType:
+          $ref: '#/components/schemas/ClientType'
+        keycloakRealm:
+          type: string
+        dbName:
+          type: string
+        status:
+          $ref: '#/components/schemas/TenantStatus'
+        createdAt:
+          type: string
+          format: date-time
+      example:
+        id: 1
+        name: École LAPEREAUX
+        clientType: ECOLE
+        keycloakRealm: ecole-lapereaux
+        dbName: ecole_lapereaux
+        status: ACTIVE
+        createdAt: '2026-07-11T09:00:00Z'
+    ProblemDetail:
+      type: object
+      description: >
+        Corps d'erreur RFC 7807 tel que renvoyé par TenantAdminExceptionHandler
+        (org.springframework.http.ProblemDetail).
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri

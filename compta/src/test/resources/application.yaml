@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: compta
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    locations: classpath:db/migration/admin   # migre uniquement postgres_admin_db (datasource primaire)
+
+compta:
+  crypto:
+    # Clé de test uniquement (AES-256, 32 octets décodés) — jamais utilisée en production.
+    master-key: MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=
+  tenant:
+    flyway:
+      locations: classpath:db/migration/tenant
+  keycloak:
+    base-url: http://localhost:8080
+    admin-realm: admin
+
+# Remarque : aucune configuration spring.datasource.* ici. Le datasource est
+# fourni dynamiquement par le conteneur PostgreSQL Testcontainers jetable
+# démarré dans ComptaApplicationTests via @ServiceConnection — voir HELP.md.

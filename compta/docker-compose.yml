@@ -1,0 +1,45 @@
+
+# Environnement de développement local pour "compta" (ERP OHADA multi-tenant).
+#
+# Fournit :
+#   - postgres : le serveur PostgreSQL de DÉVELOPPEMENT, avec un volume nommé
+#     persistant. Sert à héberger manuellement `postgres_admin_db` (annuaire
+#     des tenants) et les bases tenant (ex. `ecole_lapereaux`), via le script
+#     de référence scripts/bootstrap_postgres.sql (voir HELP.md).
+#   - keycloak : le serveur Keycloak, en mode développement (`start-dev`).
+#     La création du realm admin (rôle SUPER_ADMIN) et des realms tenant
+#     (ex. "ecole-lapereaux") reste une étape MANUELLE dans la console
+#     d'administration Keycloak — non automatisée dans ce lot.
+#
+# NE couvre PAS la base PostgreSQL utilisée par les tests d'intégration
+# (ComptaApplicationTests) : celle-ci est un conteneur Testcontainers
+# éphémère démarré/détruit automatiquement par Maven (aucune donnée
+# persistée, aucun conflit avec la base de dev ci-dessous) — voir HELP.md,
+# section "Tests d'intégration".
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_SUPERUSER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - compta-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+    ports:
+      - "8081:8080"
+
+volumes:
+  compta-postgres-data:
