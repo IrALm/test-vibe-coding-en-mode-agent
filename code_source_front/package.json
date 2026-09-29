@@ -11,9 +11,9 @@
   "private": true,
   "packageManager": "npm@11.6.1",
   "dependencies": {
-    "@angular/common": "^21.2.0",
-    "@angular/compiler": "^21.2.0",
-    "@angular/core": "^21.2.0",
+    "@angular/common": "^21.2.20",
+    "@angular/compiler": "^21.2.19",
+    "@angular/core": "^21.2.20",
     "@angular/forms": "^21.2.0",
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
@@ -27,6 +27,6 @@
     "jsdom": "^28.0.0",
     "prettier": "^3.8.1",
     "typescript": "~5.9.2",
-    "vitest": "^4.0.8"
+    "vitest": "^5.0.2"
   }
 }
