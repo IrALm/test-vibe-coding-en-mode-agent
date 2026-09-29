@@ -1,0 +1,250 @@
+<div class="modale-fond" (click)="demanderFermeture()">
+  <div class="modale modale--formulaire" (click)="$event.stopPropagation()">
+    @if (!succes()) {
+      <button type="button" class="modale-fermer" (click)="demanderFermeture()" aria-label="Fermer">
+        &times;
+      </button>
+      <div class="modale-titre" style="margin-bottom: 20px">Nouveau tiers</div>
+
+      <div class="stepper">
+        @for (n of [1, 2, 3]; track n) {
+          <div
+            class="step"
+            [class.step--actif]="etape() === n"
+            [class.step--complete]="etape() > n"
+          >
+            <div class="step-cercle">{{ etape() > n ? '✓' : n }}</div>
+            <div class="step-label">
+              {{ n === 1 ? 'Identité' : n === 2 ? 'Contact' : 'Compte & options' }}
+            </div>
+          </div>
+          @if (n < 3) {
+            <div class="step-ligne" [class.step-ligne--complete]="etape() > n"></div>
+          }
+        }
+      </div>
+
+      @if (erreurGenerale()) {
+        <app-alert type="error">{{ erreurGenerale() }}</app-alert>
+      }
+
+      @if (etape() === 1) {
+        <div class="formulaire">
+          <div class="champ-groupe-label">Type de tiers</div>
+          <div class="segmented segmented--5">
+            @for (t of typesTiers; track t) {
+              <button
+                type="button"
+                class="segmented-option segmented-option--compact"
+                [class.actif]="type() === t"
+                (click)="choisirType(t)"
+              >
+                {{ libellesType[t] }}
+              </button>
+            }
+          </div>
+
+          <label>
+            Raison sociale
+            <input
+              type="text"
+              [value]="raisonSociale()"
+              (input)="raisonSociale.set($any($event.target).value)"
+              placeholder="Ex. Comptoir Général SARL"
+            />
+          </label>
+
+          <label>
+            N° fiscal (NIF/RCCM)
+            <input
+              type="text"
+              [value]="numeroFiscal()"
+              (input)="numeroFiscal.set($any($event.target).value)"
+              placeholder="Optionnel"
+            />
+          </label>
+
+          @if (type() === 'SALARIE') {
+            <label>
+              Intitulé du poste
+              <input
+                type="text"
+                [value]="intitulePoste()"
+                (input)="intitulePoste.set($any($event.target).value)"
+                placeholder="Ex. Comptable senior"
+              />
+            </label>
+          }
+        </div>
+      }
+
+      @if (etape() === 2) {
+        <div class="formulaire">
+          <label>
+            Nom du contact
+            <input
+              type="text"
+              [value]="nomContact()"
+              (input)="nomContact.set($any($event.target).value)"
+              placeholder="Optionnel"
+            />
+          </label>
+
+          <label>
+            E-mail
+            <input
+              type="email"
+              [value]="email()"
+              (input)="email.set($any($event.target).value)"
+              placeholder="Optionnel"
+            />
+            @if (avertissementEmail()) {
+              <span class="champ-avertissement">Format d'e-mail inhabituel.</span>
+            }
+          </label>
+
+          <label>
+            Téléphone
+            <input
+              type="text"
+              [value]="telephone()"
+              (input)="telephone.set($any($event.target).value)"
+              placeholder="Optionnel"
+            />
+          </label>
+
+          <label>
+            Adresse
+            <input
+              type="text"
+              [value]="adresse()"
+              (input)="adresse.set($any($event.target).value)"
+              placeholder="Optionnel"
+            />
+          </label>
+        </div>
+      }
+
+      @if (etape() === 3) {
+        <div class="formulaire">
+          <label>
+            Classe comptable
+            <select [value]="classeId()" (change)="choisirClasse($any($event.target).value)">
+              <option value="">— Aucun compte associé pour l'instant —</option>
+              @for (c of classes(); track c.id) {
+                <option [value]="c.id">Classe {{ c.numero }} — {{ c.titre }}</option>
+              }
+            </select>
+          </label>
+
+          @if (classeId()) {
+            <label>
+              Compte associé
+              <select
+                [value]="compteAssocieId()"
+                (change)="compteAssocieId.set($any($event.target).value)"
+                [disabled]="chargementComptes()"
+              >
+                <option value="">— Sélectionnez un compte —</option>
+                @for (c of comptesDeClasse(); track c.id) {
+                  <option [value]="c.id">{{ c.numero }} — {{ c.libelle }}</option>
+                }
+              </select>
+            </label>
+          }
+
+          <div class="toggle-row">
+            <span class="toggle-label">Actif</span>
+            <label class="switch">
+              <input type="checkbox" [checked]="actif()" (change)="toggleActif()" />
+              <span class="switch-track"><span class="switch-thumb"></span></span>
+            </label>
+          </div>
+
+          <div class="recap-card">
+            <div class="recap-ligne">
+              <span>Type</span>
+              <span class="recap-valeur">{{ typeLibelle() }}</span>
+            </div>
+            <div class="recap-ligne">
+              <span>Raison sociale</span>
+              <span class="recap-valeur">{{ raisonSociale() || '—' }}</span>
+            </div>
+            <div class="recap-ligne">
+              <span>Compte associé</span>
+              <span class="recap-valeur">
+                @if (compteSelectionne(); as c) {
+                  {{ c.numero }} — {{ c.libelle }}
+                } @else {
+                  Aucun
+                }
+              </span>
+            </div>
+            <div class="recap-ligne">
+              <span>Statut</span>
+              <span class="recap-valeur">{{ actif() ? 'Actif' : 'Inactif' }}</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <div class="modale-formulaire-actions">
+        @if (etape() > 1) {
+          <button type="button" class="btn btn-secondary" (click)="precedent()">← Précédent</button>
+        } @else {
+          <span></span>
+        }
+        @if (etape() < 3) {
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="!etapeValide()"
+            (click)="suivant()"
+          >
+            Suivant →
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="enCoursCreation()"
+            (click)="creerTiers()"
+          >
+            {{ enCoursCreation() ? 'Création…' : 'Créer le tiers' }}
+          </button>
+        }
+      </div>
+    } @else {
+      <div class="succes-ecran">
+        <div class="succes-icone">✓</div>
+        <div class="succes-titre">Tiers créé</div>
+        <div class="succes-actions">
+          <button type="button" class="btn btn-secondary" (click)="creerUnAutre()">
+            Créer un autre tiers
+          </button>
+          <button type="button" class="btn btn-primary" (click)="voirLaListe()">Voir la liste</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+@if (confirmationFermeture()) {
+  <div class="modale-fond" (click)="annulerFermeture()">
+    <div class="modale" (click)="$event.stopPropagation()">
+      <div class="modale-titre">Abandonner la création ?</div>
+      <p class="modale-message">
+        Le formulaire contient des informations non enregistrées. Elles seront perdues si vous
+        fermez maintenant.
+      </p>
+      <div class="modale-actions">
+        <button type="button" class="btn btn-secondary" (click)="annulerFermeture()">
+          Continuer la saisie
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmerFermeture()">
+          Fermer sans enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+}

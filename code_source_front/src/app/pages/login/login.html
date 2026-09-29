@@ -1,0 +1,38 @@
+<div class="auth-shell">
+  <div class="auth-card">
+    <a routerLink="/" class="retour">&larr; Accueil</a>
+
+    <h1 class="page-title">Connexion</h1>
+
+    @if (messageSucces()) {
+      <app-alert type="success">{{ messageSucces() }}</app-alert>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="soumettre()" class="formulaire">
+      <label>
+        Email
+        <input type="email" formControlName="email" />
+      </label>
+      <label>
+        Mot de passe
+        <div class="champ-mdp">
+          <input [type]="mdpVisible() ? 'text' : 'password'" formControlName="motDePasse" />
+          <app-password-toggle [(visible)]="mdpVisible" />
+        </div>
+      </label>
+
+      @if (erreur()) {
+        <app-alert type="error">{{ erreur() }}</app-alert>
+      }
+
+      <div class="actions">
+        <a [routerLink]="['/mot-de-passe-oublie']" [queryParams]="{ email: form.value.email }" class="retour"
+          >Mot de passe oublié ?</a
+        >
+        <button type="submit" class="btn btn-primary" [disabled]="enCours()">
+          {{ enCours() ? 'Connexion...' : 'Se connecter' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,130 @@
+// Design tokens — Comptano Design System (Walsia)
+// Source : docs/Walsia Design System.dc.html + docs/Walsia Design System - Handoff.dc.html
+// Toutes les couleurs sont en oklch(). Ne jamais référencer de couleur brute
+// dans les composants : uniquement les tokens sémantiques ci-dessous.
+
+:root {
+  // Neutres / surfaces
+  --bg: oklch(0.98 0.003 95);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.95 0.004 95);
+  --surface-sunken: oklch(0.95 0.004 95);
+  --border: oklch(0.9 0.005 95);
+  --border-strong: oklch(0.82 0.006 95);
+
+  // Texte
+  --text: oklch(0.155 0.006 250);
+  --text-muted: oklch(0.4 0.008 250);
+  --text-faint: oklch(0.52 0.008 95);
+  --text-on-accent: oklch(1 0 0);
+
+  // Marque / accent
+  --n-200: oklch(0.9 0.005 95);
+  --n-700: oklch(0.3 0.008 250);
+  --n-800: oklch(0.22 0.007 250);
+  --copper-200: oklch(0.86 0.05 55);
+  --copper-500: oklch(0.58 0.13 45);
+  --accent: oklch(0.58 0.13 45);
+  --accent-soft: oklch(0.86 0.05 55);
+  --accent-on-soft: oklch(0.38 0.1 40);
+
+  // États
+  --success: oklch(0.46 0.12 150);
+  --success-soft: oklch(0.94 0.03 150);
+  --success-on-soft: oklch(0.46 0.12 150);
+  --error: oklch(0.58 0.17 25);
+  --error-soft: oklch(0.95 0.03 25);
+  --error-on-soft: oklch(0.48 0.16 25);
+  --warning: oklch(0.48 0.12 80);
+  --warning-soft: oklch(0.94 0.04 85);
+  --warning-on-soft: oklch(0.48 0.12 80);
+
+  // Comptabilité
+  --debit: oklch(0.155 0.006 250);
+  --credit: oklch(0.48 0.12 42);
+
+  // Badges de rôle
+  --role-admin-bg: oklch(0.86 0.05 55);
+  --role-admin-fg: oklch(0.38 0.1 40);
+  --role-admin-border: oklch(0.72 0.09 55);
+  --role-admin-financier-bg: oklch(0.94 0.03 265);
+  --role-admin-financier-fg: oklch(0.46 0.12 265);
+  --role-admin-financier-border: oklch(0.72 0.09 265);
+  --role-comptable-bg: oklch(0.94 0.03 150);
+  --role-comptable-fg: oklch(0.46 0.12 150);
+  --role-comptable-border: oklch(0.72 0.09 150);
+  --role-rh-bg: oklch(0.94 0.04 300);
+  --role-rh-fg: oklch(0.46 0.12 300);
+  --role-rh-border: oklch(0.72 0.09 300);
+  --role-achats-bg: oklch(0.94 0.04 85);
+  --role-achats-fg: oklch(0.55 0.12 80);
+  --role-achats-border: oklch(0.72 0.09 85);
+  --role-caissier-bg: oklch(0.94 0.03 220);
+  --role-caissier-fg: oklch(0.46 0.1 220);
+  --role-caissier-border: oklch(0.72 0.08 220);
+  --role-lecture-bg: oklch(0.92 0.003 95);
+  --role-lecture-fg: oklch(0.4 0.008 250);
+  --role-lecture-border: oklch(0.82 0.006 95);
+
+  // Formes
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-pill: 999px;
+
+  // Ombres (opacité noire, jamais colorée)
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.08);
+  --shadow-md: 0 2px 8px oklch(0 0 0 / 0.1);
+  --shadow-lg: 0 8px 24px oklch(0 0 0 / 0.14);
+
+  // Densité
+  --row-comfortable: 44px;
+  --row-dense: 34px;
+
+  // Typographie
+  --font-sans: Helvetica, Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, monospace;
+}
+
+[data-theme='dark'] {
+  --bg: oklch(0.17 0.006 250);
+  --surface: oklch(0.23 0.007 250);
+  --surface-2: oklch(0.3 0.008 250);
+  --surface-sunken: oklch(0.13 0.006 250);
+  --border: oklch(0.3 0.008 250);
+  --border-strong: oklch(0.4 0.008 250);
+
+  --text: oklch(0.97 0.003 95);
+  --text-muted: oklch(0.72 0.008 95);
+  --text-faint: oklch(0.58 0.015 55);
+  --text-on-accent: oklch(0.3 0.09 42);
+
+  --n-200: var(--border);
+  --n-700: var(--text-muted);
+  --n-800: oklch(0.9 0.015 55);
+  --copper-200: oklch(0.86 0.05 55);
+  --copper-500: oklch(0.72 0.09 55);
+  --accent: oklch(0.88 0.045 55);
+  --accent-soft: oklch(0.42 0.1 45);
+  --accent-on-soft: oklch(0.9 0.05 55);
+
+  --success: oklch(0.72 0.09 150);
+  --success-soft: oklch(0.28 0.05 150);
+  --success-on-soft: oklch(0.72 0.09 150);
+  --error: oklch(0.72 0.13 25);
+  --error-soft: oklch(0.3 0.06 25);
+  --error-on-soft: oklch(0.72 0.13 25);
+  --warning: oklch(0.8 0.1 85);
+  --warning-soft: oklch(0.3 0.06 85);
+  --warning-on-soft: oklch(0.8 0.1 85);
+
+  --debit: oklch(0.95 0.004 95);
+  --credit: oklch(0.88 0.045 55);
+
+  --shadow-lg: 0 8px 24px oklch(0 0 0 / 0.4);
+
+  // Badges de rôle — mêmes teintes en sombre (déjà à contraste suffisant)
+  --role-lecture-bg: oklch(0.3 0.008 250);
+  --role-lecture-fg: oklch(0.72 0.008 95);
+  --role-lecture-border: oklch(0.4 0.008 250);
+}

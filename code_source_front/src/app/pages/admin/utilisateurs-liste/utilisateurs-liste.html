@@ -1,0 +1,144 @@
+<div class="page-shell">
+  <a routerLink="/" class="retour">&larr; Accueil</a>
+
+  <div class="page-header">
+    <h1 class="page-title" style="margin:0;">Utilisateurs</h1>
+    <a routerLink="/admin/utilisateurs/nouveau" class="btn btn-primary">+ Ajouter un utilisateur</a>
+  </div>
+
+  @if (erreur()) {
+    <app-alert type="error">{{ erreur() }}</app-alert>
+  }
+
+  <div class="table-panel">
+    <div class="toolbar">
+      <input
+        type="search"
+        [value]="query()"
+        (input)="onSaisieRecherche($any($event.target).value)"
+        placeholder="Rechercher par nom, post-nom, prénom ou email…"
+      />
+    </div>
+
+    <div class="toolbar">
+      <div class="chip-group">
+        <button type="button" class="chip" [class.actif]="filtres.value.role === ''" (click)="filtrerParRole('')">
+          Tous
+        </button>
+        @for (r of roles; track r) {
+          <button type="button" class="chip" [class.actif]="filtres.value.role === r" (click)="filtrerParRole(r)">
+            {{ r }}
+          </button>
+        }
+      </div>
+      <div class="chip-group">
+        <button type="button" class="chip" [class.actif]="filtres.value.actif === ''" (click)="filtrerParActif('')">
+          Tous statuts
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.actif]="filtres.value.actif === 'true'"
+          (click)="filtrerParActif('true')"
+        >
+          Actif
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.actif]="filtres.value.actif === 'false'"
+          (click)="filtrerParActif('false')"
+        >
+          Inactif
+        </button>
+      </div>
+    </div>
+
+    <table class="table-dense">
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Rôle</th>
+          <th>Statut</th>
+          <th>Ajouté le</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of pageContenu(); track u.id) {
+          <tr [class.row-flash-actif]="flashId() === u.id && u.actif" [class.row-flash-inactif]="flashId() === u.id && !u.actif">
+            <td>{{ u.nom }} {{ u.prenom }}{{ u.postNom ? ' ' + u.postNom : '' }}</td>
+            <td>{{ u.email }}</td>
+            <td>
+              @if (u.role) {
+                <app-role-badge [role]="u.role" />
+              }
+            </td>
+            <td>
+              <app-status-badge [tone]="u.actif ? 'success' : 'neutral'">{{ u.actif ? 'Actif' : 'Inactif' }}</app-status-badge>
+            </td>
+            <td>{{ u.createdAt | date: 'short' }}</td>
+            <td>
+              <button
+                type="button"
+                class="btn btn-sm"
+                [class.btn-desactiver]="u.actif"
+                [class.btn-activer]="!u.actif"
+                (click)="demanderBascule(u)"
+              >
+                {{ u.actif ? 'Désactiver' : 'Activer' }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="aucun-resultat">Aucun utilisateur ne correspond à cette recherche.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="table-pagination">
+      <span>Page {{ pageClient() + 1 }} / {{ totalPagesClient() }} ({{ utilisateursFiltres().length }} utilisateur(s))</span>
+      <div class="pager">
+        <button type="button" [disabled]="pageClient() === 0" (click)="pagePrecedente()">&lsaquo;</button>
+        <button type="button" [disabled]="pageClient() >= totalPagesClient() - 1" (click)="pageSuivante()">&rsaquo;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (confirmation(); as c) {
+  <div class="modale-fond" (click)="annulerConfirmation()">
+    <div class="modale" (click)="$event.stopPropagation()">
+      <div class="modale-titre">{{ c.versActif ? "Activer l'utilisateur ?" : "Désactiver l'utilisateur ?" }}</div>
+      <p class="modale-message">
+        @if (c.versActif) {
+          {{ c.utilisateur.nom }} {{ c.utilisateur.prenom }} pourra de nouveau se connecter et accéder à Comptano.
+        } @else {
+          {{ c.utilisateur.nom }} {{ c.utilisateur.prenom }} ne pourra plus se connecter tant que le compte reste désactivé.
+        }
+      </p>
+      <div class="modale-actions">
+        <button type="button" class="btn btn-secondary" (click)="annulerConfirmation()">Annuler</button>
+        <button
+          type="button"
+          class="btn"
+          [class.btn-danger]="!c.versActif"
+          [class.btn-activer]="c.versActif"
+          (click)="confirmerBascule()"
+        >
+          {{ c.versActif ? 'Activer' : 'Désactiver' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (toast(); as t) {
+  <div class="toast" [class.toast-success]="t.tone === 'success'" [class.toast-neutral]="t.tone === 'neutral'" [class.toast-error]="t.tone === 'error'">
+    <span>{{ t.message }}</span>
+    <button type="button" (click)="fermerToast()">OK</button>
+  </div>
+}

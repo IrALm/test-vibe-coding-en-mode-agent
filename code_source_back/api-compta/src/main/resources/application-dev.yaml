@@ -1,0 +1,45 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/${POSTGRES_METIER_DB:erp_metier}
+    username: ${POSTGRES_METIER_USER:erp_user}
+    password: ${POSTGRES_METIER_PASSWORD:erp_password}
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/erp-comptable}
+
+app:
+  mail:
+    api-base-url: ${MAIL_API_BASE_URL:https://api.mail.hostinger.com}
+    api-token: ${MAIL_API_TOKEN:changeme}
+    mailbox-resource-id: ${MAIL_MAILBOX_RESOURCE_ID:changeme}
+    display-name: ${MAIL_FROM_DISPLAY_NAME:ERP Comptable}
+  frontend:
+    base-url: ${FRONTEND_BASE_URL:http://localhost:3000}
+  session:
+    encryption-key: ${SESSION_ENCRYPTION_KEY:changeme-32-bytes-base64-key-dev}
+    cookie-secure: ${SESSION_COOKIE_SECURE:true}
+
+keycloak:
+  realm: ${KEYCLOAK_REALM:erp-comptable}
+  auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL:http://localhost:8081}
+  admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:api-compta-admin}
+  admin-client-secret: ${KC_APP_CLIENT_SECRET:changeme}
+  bff-client-id: ${KC_BFF_CLIENT_ID:api-compta-bff}
+  bff-client-secret: ${KC_BFF_CLIENT_SECRET:changeme}
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    com.walsia.api_compta: debug

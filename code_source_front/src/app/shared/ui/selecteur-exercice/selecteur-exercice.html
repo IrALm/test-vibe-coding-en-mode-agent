@@ -1,0 +1,49 @@
+<button
+  type="button"
+  class="selecteur-exercice-bouton"
+  aria-haspopup="listbox"
+  [attr.aria-expanded]="ouvert()"
+  (click)="toggle()"
+>
+  @if (exerciceSelectionne(); as e) {
+    <span class="selecteur-exercice-periode">
+      {{ e.dateDebut | date: 'dd/MM/yyyy' }} &rarr; {{ e.dateFin | date: 'dd/MM/yyyy' }}
+    </span>
+    <app-status-badge [tone]="e.statut === 'OUVERT' ? 'success' : 'neutral'">
+      {{ e.statut === 'OUVERT' ? 'Ouvert' : 'Clôturé' }}
+    </app-status-badge>
+  } @else {
+    <span class="selecteur-exercice-periode">Sélectionner un exercice</span>
+  }
+  <span class="selecteur-exercice-chevron" [class.selecteur-exercice-chevron--ouvert]="ouvert()">&#9662;</span>
+</button>
+
+@if (ouvert()) {
+  <div class="selecteur-exercice-calque" (click)="fermer()"></div>
+  <div class="selecteur-exercice-panneau" role="listbox">
+    @for (e of exercices(); track e.id) {
+      <button
+        type="button"
+        role="option"
+        class="selecteur-exercice-option"
+        [attr.aria-selected]="e.id === value()"
+        [class.selecteur-exercice-option--actif]="e.id === value()"
+        (click)="choisir(e.id)"
+      >
+        <span class="selecteur-exercice-periode">
+          {{ e.dateDebut | date: 'dd/MM/yyyy' }} &rarr; {{ e.dateFin | date: 'dd/MM/yyyy' }}
+        </span>
+        <span class="selecteur-exercice-option-droite">
+          <app-status-badge [tone]="e.statut === 'OUVERT' ? 'success' : 'neutral'">
+            {{ e.statut === 'OUVERT' ? 'Ouvert' : 'Clôturé' }}
+          </app-status-badge>
+          @if (e.id === value()) {
+            <span class="selecteur-exercice-coche">&check;</span>
+          }
+        </span>
+      </button>
+    } @empty {
+      <div class="rail-vide">Aucun exercice.</div>
+    }
+  </div>
+}

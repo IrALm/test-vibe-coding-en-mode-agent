@@ -1,0 +1,265 @@
+<div class="page-shell">
+  <div class="fil-ariane">
+    <a routerLink="/comptabilite">Comptabilité</a> /
+    <a routerLink="/comptabilite/ecritures">Écritures</a> / Détail
+  </div>
+
+  @if (erreur()) {
+    <app-alert type="error">{{ erreur() }}</app-alert>
+  }
+
+  @if (ecriture(); as e) {
+    <div class="page-header">
+      <div>
+        <h1 class="page-title" style="margin: 0 0 4px">{{ e.libelle }}</h1>
+        <div class="page-intro" style="margin: 0">
+          {{ e.date | date: 'dd/MM/yyyy' }}
+          @if (e.numero) {
+            &middot; N&deg; {{ e.numero }}
+          }
+          @if (e.reference) {
+            &middot; Réf. {{ e.reference }}
+          }
+        </div>
+      </div>
+      <app-ecriture-statut-badge [statut]="e.statut" />
+    </div>
+
+    @if (e.motifRejet) {
+      <app-alert type="warning">Motif du dernier renvoi en brouillon : {{ e.motifRejet }}</app-alert>
+    }
+
+    <div class="table-panel">
+      <table class="table-dense">
+        <thead>
+          <tr>
+            <th>Compte</th>
+            <th>Sens</th>
+            <th class="col-montant">Montant</th>
+            <th>Libellé</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of e.lignes; track l.id) {
+            <tr>
+              <td>
+                <strong style="color: var(--accent-on-soft)">{{ l.compteNumero }}</strong>
+                {{ l.compteLibelle }}
+              </td>
+              <td>
+                <span class="badge-sens" [class]="'badge-sens--' + l.sens.toLowerCase()">
+                  {{ l.sens === 'DEBIT' ? 'Débit' : 'Crédit' }}
+                </span>
+              </td>
+              <td class="col-montant">{{ formaterMontant(l.montant) }}</td>
+              <td>{{ l.libelle }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <div class="bandeau-equilibre" [class.bandeau-equilibre--ok]="e.equilibree" style="margin: 16px">
+        <span>Σ Débits <strong class="tabular-nums">{{ formaterMontant(e.totalDebit) }}</strong></span>
+        <span>Σ Crédits <strong class="tabular-nums">{{ formaterMontant(e.totalCredit) }}</strong></span>
+        <span>{{ e.equilibree ? 'Équilibrée' : 'Déséquilibrée' }}</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-titre">Historique</h2>
+      <p class="entreprise-ligne">
+        <span>Créée par</span>
+        <span class="entreprise-valeur">{{ e.creeParNom }} &mdash; {{ e.creeLe | date: 'dd/MM/yyyy HH:mm' }}</span>
+      </p>
+      @if (e.valideParNom) {
+        <p class="entreprise-ligne">
+          <span>Validée par</span>
+          <span class="entreprise-valeur">{{ e.valideParNom }} &mdash; {{ e.valideLe | date: 'dd/MM/yyyy HH:mm' }}</span>
+        </p>
+      }
+      @if (e.contrePassationDeId) {
+        <p class="entreprise-ligne">
+          <span>Contre-passation de</span>
+          <span class="entreprise-valeur">
+            <a [routerLink]="['/comptabilite/ecritures', e.contrePassationDeId]">voir l'écriture d'origine</a>
+          </span>
+        </p>
+      }
+      @if (e.ecritureMiroirId) {
+        <p class="entreprise-ligne">
+          <span>Contre-passée par</span>
+          <span class="entreprise-valeur">
+            <a [routerLink]="['/comptabilite/ecritures', e.ecritureMiroirId]">voir l'écriture miroir</a>
+          </span>
+        </p>
+      }
+    </div>
+
+    @if (erreurAction()) {
+      <app-alert type="error">{{ erreurAction() }}</app-alert>
+    }
+
+    <div class="modale-formulaire-actions">
+      @if (peutModifier()) {
+        <button type="button" class="btn btn-secondary" (click)="modifier()">Modifier</button>
+      }
+      @if (peutSupprimer()) {
+        <button type="button" class="btn btn-danger" (click)="demanderSuppression()">Supprimer</button>
+      }
+      @if (peutRenvoyer()) {
+        <button
+          type="button"
+          class="btn btn-secondary"
+          [disabled]="enCoursAction()"
+          (click)="ouvrirModaleRenvoi()"
+        >
+          Renvoyer en brouillon
+        </button>
+      }
+      @if (peutValider()) {
+        <button type="button" class="btn btn-succes" [disabled]="enCoursAction()" (click)="demanderValidation()">
+          &check; Valider
+        </button>
+      }
+      @if (peutContrePasser()) {
+        <button
+          type="button"
+          class="btn btn-secondary"
+          [disabled]="enCoursAction()"
+          (click)="demanderContrePassation()"
+        >
+          Contre-passer
+        </button>
+      }
+    </div>
+  }
+</div>
+
+@if (confirmationSuppression()) {
+  <div class="modale-fond" (click)="annulerSuppression()">
+    <div class="modale" (click)="$event.stopPropagation()">
+      <div class="modale-titre">Supprimer ce brouillon ?</div>
+      <p class="modale-message">Cette action est irréversible.</p>
+      <div class="modale-actions">
+        <button type="button" class="btn btn-secondary" (click)="annulerSuppression()">Annuler</button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          [disabled]="enCoursAction()"
+          (click)="confirmerSuppression()"
+        >
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (confirmationValidation() && ecriture(); as e) {
+  <div class="modale-fond" (click)="annulerValidation()">
+    <div class="modale" (click)="$event.stopPropagation()">
+      <div class="modale-titre">Valider cette écriture ?</div>
+      <div class="card" style="margin-bottom: 16px">
+        <p class="entreprise-ligne">
+          <span>Libellé</span>
+          <span class="entreprise-valeur">{{ e.libelle }}</span>
+        </p>
+        <p class="entreprise-ligne">
+          <span>Référence</span>
+          <span class="entreprise-valeur">{{ e.reference }}</span>
+        </p>
+        <p class="entreprise-ligne">
+          <span>Montant</span>
+          <span class="entreprise-valeur tabular-nums">{{ formaterMontant(e.totalDebit) }}</span>
+        </p>
+        <p class="entreprise-ligne">
+          <span>Soumise par</span>
+          <span class="entreprise-valeur">{{ e.creeParNom }}</span>
+        </p>
+      </div>
+      <app-alert type="warning">Une fois validée, l'écriture est verrouillée et intégrée au grand livre.</app-alert>
+      <div class="modale-actions" style="margin-top: 16px">
+        <button type="button" class="btn btn-secondary" (click)="annulerValidation()">Annuler</button>
+        <button
+          type="button"
+          class="btn btn-succes"
+          [disabled]="enCoursAction()"
+          (click)="confirmerValidation()"
+        >
+          &check; Confirmer et valider
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (confirmationContrePassation() && ecriture(); as e) {
+  <div class="modale-fond" (click)="annulerContrePassation()">
+    <div class="modale" (click)="$event.stopPropagation()">
+      <div class="modale-titre">Contre-passer cette écriture ?</div>
+      <div class="card" style="margin-bottom: 16px">
+        <p class="entreprise-ligne">
+          <span>Libellé</span>
+          <span class="entreprise-valeur">{{ e.libelle }}</span>
+        </p>
+        <p class="entreprise-ligne">
+          <span>N&deg;</span>
+          <span class="entreprise-valeur">{{ e.numero }}</span>
+        </p>
+        <p class="entreprise-ligne">
+          <span>Référence</span>
+          <span class="entreprise-valeur">{{ e.reference }}</span>
+        </p>
+        <p class="entreprise-ligne">
+          <span>Montant</span>
+          <span class="entreprise-valeur tabular-nums">{{ formaterMontant(e.totalDebit) }}</span>
+        </p>
+      </div>
+      <div class="formulaire" style="margin-bottom: 16px">
+        <label>
+          Date de la contre-passation
+          <app-date-picker
+            [(value)]="dateContrePassation"
+            [min]="exerciceOuvert()?.dateDebut"
+            [max]="exerciceOuvert()?.dateFin"
+          />
+        </label>
+      </div>
+      <app-alert type="warning">
+        Une écriture miroir sera créée en brouillon (lignes inversées), rattachée à l'exercice
+        ouvert courant. Cette écriture-ci ne sera marquée « Contre-passée » qu'une fois le
+        miroir validé.
+      </app-alert>
+      <div class="modale-actions" style="margin-top: 16px">
+        <button type="button" class="btn btn-secondary" (click)="annulerContrePassation()">Annuler</button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="enCoursAction()"
+          (click)="confirmerContrePassation()"
+        >
+          Confirmer et contre-passer
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (modaleRenvoiOuverte()) {
+  <div class="modale-fond" (click)="fermerModaleRenvoi()">
+    <div class="modale" (click)="$event.stopPropagation()">
+      <div class="modale-titre">Renvoyer en brouillon</div>
+      <div class="formulaire">
+        <label>
+          Motif (optionnel)
+          <input type="text" [value]="motifRenvoi()" (input)="motifRenvoi.set($any($event.target).value)" />
+        </label>
+        <div class="modale-actions">
+          <button type="button" class="btn btn-secondary" (click)="fermerModaleRenvoi()">Annuler</button>
+          <button type="button" class="btn btn-primary" [disabled]="enCoursAction()" (click)="confirmerRenvoi()">
+            Renvoyer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

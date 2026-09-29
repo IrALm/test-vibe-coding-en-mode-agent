@@ -1,0 +1,110 @@
+<div class="page-shell">
+  <div class="fil-ariane"><a routerLink="/comptabilite">Comptabilité</a> / Grand livre</div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title" style="margin: 0">Grand livre</h1>
+      <p class="page-intro" style="margin: 3px 0 0">Mouvements par compte, solde progressif.</p>
+    </div>
+    <app-selecteur-exercice
+      [exercices]="exercices()"
+      [value]="exerciceId()"
+      (valueChange)="changerExercice($event)"
+    />
+  </div>
+
+  @if (erreur()) {
+    <app-alert type="error">{{ erreur() }}</app-alert>
+  }
+
+  <div class="grand-livre-corps">
+    <aside class="classes-rail grand-livre-rail">
+      <div class="rail-recherche">
+        <input
+          type="search"
+          placeholder="Compte (n° ou libellé)…"
+          [value]="query()"
+          (input)="onSaisieRecherche($any($event.target).value)"
+        />
+      </div>
+      <div class="rail-liste">
+        @for (g of groupes(); track g.classe.id) {
+          <button type="button" class="classe-item" [class.actif]="g.ouverte" (click)="toggleClasse(g.classe.id)">
+            <span class="classe-pastille tabular-nums">{{ g.classe.numero }}</span>
+            <span class="classe-texte"><span class="classe-titre">{{ g.classe.titre }}</span></span>
+            <span class="classe-chevron" [class.classe-chevron--ouvert]="g.ouverte">&#9656;</span>
+          </button>
+          @if (g.ouverte) {
+            @for (c of g.comptes; track c.id) {
+              <button
+                type="button"
+                class="compte-rail-item"
+                [class.actif]="compteSelectionne()?.id === c.id"
+                (click)="selectionnerCompte(c)"
+              >
+                <span class="compte-rail-numero">{{ c.numero }}</span>
+                <span class="compte-rail-libelle">{{ c.libelle }}</span>
+              </button>
+            }
+          }
+        } @empty {
+          <div class="rail-vide">Aucun compte.</div>
+        }
+      </div>
+    </aside>
+
+    <section class="table-panel grand-livre-panneau">
+      @if (!compteSelectionne()) {
+        <div class="rail-vide">Sélectionnez un compte à gauche.</div>
+      } @else {
+        <div class="grand-livre-entete-compte">
+          <span class="grand-livre-entete-numero">{{ compteSelectionne()!.numero }}</span>
+          &mdash; {{ compteSelectionne()!.libelle }}
+        </div>
+
+        @if (erreurGrandLivre()) {
+          <app-alert type="error">{{ erreurGrandLivre() }}</app-alert>
+        }
+
+        @if (grandLivre(); as gl) {
+          <table class="table-dense">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Libellé</th>
+                <th>Réf. écriture</th>
+                <th class="col-montant">Débit</th>
+                <th class="col-montant">Crédit</th>
+                <th class="col-montant">Solde</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="ligne-synthese">
+                <td>&mdash;</td>
+                <td style="font-style: italic">Solde d'ouverture</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="col-montant tabular-nums">{{ formaterMontant(gl.soldeOuverture) }}</td>
+              </tr>
+              @for (l of gl.lignes; track l.ecritureId) {
+                <tr>
+                  <td>{{ l.date | date: 'dd/MM/yyyy' }}</td>
+                  <td>{{ l.libelle }}</td>
+                  <td>{{ l.reference }}</td>
+                  <td class="col-montant">{{ formaterMontant(l.debit) }}</td>
+                  <td class="col-montant">{{ formaterMontant(l.credit) }}</td>
+                  <td class="col-montant tabular-nums">{{ formaterMontant(l.soldeProgressif) }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="aucun-resultat">Aucun mouvement sur cet exercice.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      }
+    </section>
+  </div>
+</div>

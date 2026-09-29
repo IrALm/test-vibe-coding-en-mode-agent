@@ -1,0 +1,76 @@
+<div class="page-shell">
+  <div class="fil-ariane"><a routerLink="/comptabilite">Comptabilité</a> / Balance générale</div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title" style="margin: 0">Balance générale</h1>
+      <p class="page-intro" style="margin: 3px 0 0">Totaux et soldes par compte.</p>
+    </div>
+    <app-selecteur-exercice
+      [exercices]="exercices()"
+      [value]="exerciceId()"
+      (valueChange)="changerExercice($event)"
+    />
+  </div>
+
+  @if (erreur()) {
+    <app-alert type="error">{{ erreur() }}</app-alert>
+  }
+
+  @if (balance(); as b) {
+    <div class="table-panel">
+      <table class="table-dense">
+        <thead>
+          <tr>
+            <th>N&deg;</th>
+            <th>Libellé</th>
+            <th class="col-montant">Total débit</th>
+            <th class="col-montant">Total crédit</th>
+            <th class="col-montant">Solde</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of b.lignes; track l.compteId) {
+            <tr>
+              <td>{{ l.compteNumero }}</td>
+              <td>{{ l.compteLibelle }}</td>
+              <td class="col-montant">{{ formaterMontant(l.totalDebit) }}</td>
+              <td class="col-montant">{{ formaterMontant(l.totalCredit) }}</td>
+              <td class="col-montant" [style.color]="l.soldeDebiteur ? 'var(--debit)' : l.soldeCrediteur ? 'var(--credit)' : 'var(--text-muted)'">
+                {{ formaterMontant(l.soldeDebiteur || l.soldeCrediteur) }}
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="aucun-resultat">Aucun mouvement sur cet exercice.</td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr class="ligne-synthese">
+            <td></td>
+            <td>Total</td>
+            <td class="col-montant tabular-nums">{{ formaterMontant(b.totalDebit) }}</td>
+            <td class="col-montant tabular-nums">{{ formaterMontant(b.totalCredit) }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div
+      class="bandeau-equilibre"
+      [class.bandeau-equilibre--ok]="equilibree()"
+      [class.bandeau-equilibre--erreur]="!equilibree()"
+    >
+      <span>Σ soldes débiteurs = Σ soldes créditeurs</span>
+      <strong>
+        @if (equilibree()) {
+          &#10003; Équilibrée &mdash; {{ formaterMontant(sommeSoldesDebiteurs()) }} = {{ formaterMontant(sommeSoldesCrediteurs()) }}
+        } @else {
+          Écart de {{ formaterMontant(ecartAbsolu()) }}
+        }
+      </strong>
+    </div>
+  }
+</div>

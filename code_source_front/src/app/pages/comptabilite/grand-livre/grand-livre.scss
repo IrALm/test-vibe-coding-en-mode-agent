@@ -1,0 +1,45 @@
+.grand-livre-corps {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.grand-livre-panneau {
+  flex: 1;
+  min-width: 0;
+}
+
+.grand-livre-rail {
+  .rail-liste {
+    max-height: 560px;
+  }
+
+  // Comptes indentés sous leur classe dépliée (accordion, cf. GrandLivre.groupes()).
+  .compte-rail-item {
+    padding-left: 40px;
+  }
+}
+
+.classe-chevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--text-faint);
+  transition: transform 0.15s;
+}
+
+.classe-chevron--ouvert {
+  transform: rotate(90deg);
+}
+
+.grand-livre-entete-compte {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.grand-livre-entete-numero {
+  color: var(--accent-on-soft);
+}

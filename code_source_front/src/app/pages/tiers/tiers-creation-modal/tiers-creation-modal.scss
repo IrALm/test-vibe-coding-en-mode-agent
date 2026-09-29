@@ -1,0 +1,20 @@
+.modale--formulaire {
+  width: 560px;
+  position: relative;
+}
+
+// Type de tiers — 5 options compactes (variante de .segmented/.segmented-option de
+// components.scss, pensées à l'origine pour 2 options DÉBIT/CRÉDIT avec sous-titre).
+.segmented--5 {
+  flex-wrap: wrap;
+}
+
+.segmented-option--compact {
+  flex: 1 1 auto;
+  min-width: 100px;
+  padding: 9px 10px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}

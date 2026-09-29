@@ -1,0 +1,1080 @@
+// Classes de composants globales — Comptano Design System.
+// Réutilisées par les templates de page ; les composants Angular partagés
+// (badges, alertes, stepper) référencent aussi ces mêmes classes.
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+a {
+  color: var(--accent);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+// Layout — page large (listes, tableaux de bord)
+.page-shell {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+// Layout — page d'authentification / formulaire centré
+.auth-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 20px 80px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-card--wide {
+  max-width: 640px;
+}
+
+.retour {
+  display: inline-block;
+  margin-bottom: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+// Fil d'ariane discret ("Comptabilité / Écritures") — remplace .retour sur les écrans du
+// module Comptabilité uniquement ; les autres modules gardent .retour.
+.fil-ariane {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--accent-on-soft);
+    }
+  }
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--text);
+}
+
+.page-intro {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 24px;
+}
+
+// Cards génériques (profil, entreprise, KPI...)
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.card-grid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .card {
+    flex: 1;
+    min-width: 220px;
+  }
+}
+
+.card h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.card p {
+  margin: 6px 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.card p strong {
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+// Formulaires
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formulaire fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.formulaire legend {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0 6px;
+  color: var(--text-muted);
+}
+
+.formulaire label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.formulaire input,
+.formulaire select {
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  width: 100%;
+}
+
+.formulaire input:focus-visible,
+.formulaire select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.formulaire input.champ-invalide {
+  border-color: var(--error);
+}
+
+.formulaire input.champ-valide {
+  border-color: var(--success);
+}
+
+.formulaire .champ-erreur {
+  font-size: 12px;
+  color: var(--error);
+  font-weight: 500;
+}
+
+.formulaire .message-correspondance {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.formulaire .message-correspondance--ok {
+  color: var(--success-on-soft);
+}
+
+.formulaire .message-correspondance--erreur {
+  color: var(--error);
+}
+
+// Champ mot de passe avec bouton afficher/masquer intégré (voir app-password-toggle)
+.champ-mdp {
+  position: relative;
+}
+
+.champ-mdp input {
+  padding-right: 96px;
+  width: 100%;
+}
+
+.formulaire .actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+// Boutons
+.btn {
+  height: 38px;
+  padding: 0 18px;
+  border-radius: var(--radius-md);
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+}
+
+.btn-danger {
+  background: var(--error);
+  color: white;
+}
+
+// Action positive/irréversible (confirmer une validation) — distinct de .btn-primary (accent)
+// pour ne pas se confondre avec une action de saisie ordinaire.
+.btn-succes {
+  background: var(--success);
+  color: white;
+}
+
+// Ligne libellé/valeur (fiche récap, historique, confirmation) — accueil (entreprise/profil),
+// détail d'écriture (historique), modales de confirmation (valider/soumettre).
+.entreprise-ligne {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.entreprise-ligne:last-child {
+  border-bottom: none;
+}
+
+.entreprise-valeur {
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+}
+
+.entreprise-valeur-id {
+  word-break: break-word;
+  max-width: 60%;
+}
+
+.btn-sm {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.btn-lg {
+  height: 44px;
+  padding: 0 22px;
+  font-size: 15px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+// Panneau englobant recherche + table + pagination (une seule bordure/radius partagée)
+.table-panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+// Table dense
+.table-dense {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.table-dense thead {
+  background: var(--surface-2);
+}
+
+.table-dense th {
+  text-align: left;
+  padding: 0 12px;
+  height: 36px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.table-dense th.triable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.table-dense td {
+  padding: 0 12px;
+  height: var(--row-dense);
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.table-dense tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-dense .col-montant {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+.table-dense .aucun-resultat {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+}
+
+// Ligne de synthèse (total, solde d'ouverture...) — fond distinctif, texte gras.
+.table-dense tr.ligne-synthese td {
+  background: var(--surface-2);
+  font-weight: 700;
+  font-style: normal;
+}
+
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--surface);
+}
+
+.table-pagination .pager {
+  display: flex;
+  gap: 6px;
+}
+
+.table-pagination button {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.table-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+// Recherche & filtres
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-wrap: wrap;
+}
+
+.toolbar input[type='text'],
+.toolbar input[type='search'] {
+  flex: 1;
+  min-width: 200px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.chip-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.chip.actif {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-on-soft);
+}
+
+.badge-actif-point {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  background: var(--text-faint);
+}
+
+.badge-actif-point.actif {
+  background: var(--success-on-soft);
+}
+
+// Rail latéral filtrable (liste de classes, sélection classe->compte...) — utilisé par
+// plan-comptable-liste (page pleine) et tiers-association-modal (dans une modale).
+.classes-rail {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.rail-recherche {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+
+  input {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+  }
+}
+
+.rail-liste {
+  overflow-y: auto;
+  max-height: 520px;
+  display: flex;
+  flex-direction: column;
+}
+
+.classe-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border: none;
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface-2);
+  }
+
+  &.actif {
+    background: var(--accent-soft);
+    border-left-color: var(--accent);
+
+    &:hover {
+      background: var(--accent-soft);
+    }
+  }
+}
+
+.classe-pastille {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.classe-item.actif .classe-pastille {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.classe-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.classe-titre {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-vide {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+// Ligne compte — grand livre (repliée sous sa classe, accordion) et panneau de droite de la
+// modale "Choisir un compte" (saisie d'écriture).
+.compte-rail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border: none;
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+
+  &:hover {
+    background: var(--surface-2);
+  }
+
+  &.actif {
+    background: var(--accent-soft);
+    border-left-color: var(--accent);
+
+    &:hover {
+      background: var(--accent-soft);
+    }
+  }
+}
+
+.compte-rail-numero {
+  flex-shrink: 0;
+  width: 52px;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.compte-rail-libelle {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Toast de confirmation flottant — coin bas-droit, disparition automatique (voir composant
+// pour le setTimeout de masquage).
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  background: var(--n-800);
+  color: var(--text-on-accent);
+  padding: 12px 18px;
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow-lg);
+  animation: toast-in 0.2s ease;
+  z-index: 80;
+}
+
+// KPI — bandeau récapitulatif (accueil, plan comptable...)
+.section-titre {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+}
+
+.kpi-card {
+  padding: 18px 20px;
+}
+
+.kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.kpi-valeur {
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.kpi-valeur-texte {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+// Modale générique (confirmation, formulaires) — overlay + card centrée
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modale-fond {
+  position: fixed;
+  inset: 0;
+  background: oklch(0 0 0 / 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  animation: overlay-in 0.15s ease;
+}
+
+.modale {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 26px 28px;
+  width: 420px;
+  max-width: calc(100vw - 40px);
+  box-shadow: var(--shadow-lg);
+}
+
+.modale-titre {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.modale-message {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0 0 22px;
+}
+
+.modale-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+// Modale de formulaire multi-étapes (stepper) — utilisée par la création de compte
+// comptable et la création de tiers ; chaque page ne fixe plus que la largeur de sa
+// .modale--formulaire, tout le reste (stepper, segmented, toggle, récap, succès) est ici.
+.modale-fermer {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modale-sous-titre {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.step-cercle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+}
+
+.step--actif .step-cercle,
+.step--complete .step-cercle {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+}
+
+.step-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.step--actif .step-label {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.step-ligne {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  margin: 0 6px 20px;
+}
+
+.step-ligne--complete {
+  background: var(--accent);
+}
+
+// Champs — messages de validation (complètent .formulaire ci-dessus)
+.champ-avertissement {
+  font-size: 12px;
+  color: var(--warning-on-soft);
+  font-weight: 500;
+}
+
+.champ-info {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.champ-groupe-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+// Segmented control (sens normal du compte, type de tiers...)
+.segmented {
+  display: flex;
+  gap: 10px;
+}
+
+.segmented-option {
+  flex: 1;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  cursor: pointer;
+  text-align: left;
+  background: var(--surface);
+  font-family: var(--font-sans);
+}
+
+.segmented-option.actif {
+  border-color: var(--accent);
+  border-width: 2px;
+  background: var(--accent-soft);
+}
+
+.segmented-option-titre {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.segmented-option-sous {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+// Toggles (lettrable / actif...)
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.toggle-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+}
+
+.switch-track {
+  position: absolute;
+  inset: 0;
+  background: var(--border-strong);
+  border-radius: var(--radius-pill);
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: var(--surface);
+  border-radius: 50%;
+  transition: transform 0.15s;
+  box-shadow: var(--shadow-sm);
+}
+
+.switch input:checked + .switch-track {
+  background: var(--accent);
+}
+
+.switch input:checked + .switch-track .switch-thumb {
+  transform: translateX(18px);
+}
+
+// Récapitulatif (dernière étape d'un stepper) — carte crème
+.recap-card {
+  background: var(--accent-soft);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  margin-top: 8px;
+}
+
+.recap-ligne {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 13px;
+  color: var(--accent-on-soft);
+}
+
+.recap-ligne:not(:last-child) {
+  border-bottom: 1px solid oklch(0 0 0 / 0.08);
+}
+
+.recap-valeur {
+  font-weight: 700;
+  text-align: right;
+}
+
+// Pied de modale (stepper)
+.modale-formulaire-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+// Écran de succès (fin de stepper)
+.succes-ecran {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: 16px 0 4px;
+}
+
+.succes-icone {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--success-soft);
+  color: var(--success-on-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.succes-titre {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.succes-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+// Badge Sens (SensCompte) — DÉBIT bleuté / CRÉDIT cuivre (tableau des comptes, récap de création)
+.badge-sens {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge-sens--debit {
+  background: var(--role-caissier-bg);
+  color: var(--role-caissier-fg);
+}
+
+.badge-sens--credit {
+  background: var(--accent-soft);
+  color: var(--accent-on-soft);
+}
+
+// Bandeau de contrôle d'équilibre Σdébit=Σcrédit — utilisé par la saisie d'écriture, le
+// détail d'écriture et la balance générale (même invariant comptable, deux endroits).
+.bandeau-equilibre {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--warning-soft);
+  color: var(--warning-on-soft);
+  font-size: 13px;
+
+  strong {
+    font-size: 15px;
+  }
+}
+
+.bandeau-equilibre--ok {
+  background: var(--success-soft);
+  color: var(--success-on-soft);
+}
+
+// Écart réel (pas juste "pas encore équilibré" comme en saisie en cours) — balance générale.
+.bandeau-equilibre--erreur {
+  background: var(--error-soft);
+  color: var(--error-on-soft);
+}
+

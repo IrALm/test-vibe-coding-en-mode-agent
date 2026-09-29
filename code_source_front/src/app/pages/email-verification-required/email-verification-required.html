@@ -1,0 +1,18 @@
+<div class="auth-shell">
+  <div class="auth-card">
+    <a routerLink="/" class="retour">&larr; Accueil</a>
+
+    <h1 class="page-title">Email non vérifié</h1>
+
+    <app-alert type="error">
+      Votre adresse email n'est pas encore vérifiée. Consultez votre boîte de réception (et vos spams) pour le lien
+      de vérification envoyé à la création de votre compte.
+    </app-alert>
+
+    <p>
+      <a [routerLink]="['/renvoyer-verification']" [queryParams]="{ email }">Renvoyer l'email de vérification</a>
+    </p>
+
+    <p>Déjà vérifié ? <a routerLink="/connexion">Se reconnecter</a></p>
+  </div>
+</div>

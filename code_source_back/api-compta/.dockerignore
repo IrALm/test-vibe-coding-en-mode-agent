@@ -1,0 +1,20 @@
+.git
+.idea
+.env
+.env.*
+# On a besoin du jar (target/*.jar), produit en amont par le stage CI `build` —
+# ne pas exclure tout target/, seulement ce qui n'est pas le jar.
+target/classes
+target/test-classes
+target/*.original
+target/site
+target/surefire-reports
+doc
+keycloak
+compose.yaml
+*.md
+.gitlab-ci.yml
+checkstyle.xml
+.trivyignore
+src
+pom.xml

@@ -1,0 +1,34 @@
+.file-validation-kpi {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+@keyframes row-flash-success {
+  0%,
+  100% {
+    background: transparent;
+  }
+  30% {
+    background: var(--success-soft);
+  }
+}
+
+.row-flash-success {
+  animation: row-flash-success 0.9s ease;
+}
+
+// .toast de base vient de components.scss (position, fond, animation) ; ces deux tons
+// remplacent le fond sombre par défaut pour distinguer succès/erreur.
+.toast-success {
+  background: var(--success-soft);
+  color: var(--success-on-soft);
+}
+
+.toast-error {
+  background: var(--error-soft);
+  color: var(--error-on-soft);
+}

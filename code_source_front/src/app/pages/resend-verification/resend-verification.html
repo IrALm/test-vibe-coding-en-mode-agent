@@ -1,0 +1,26 @@
+<div class="auth-shell">
+  <div class="auth-card">
+    <a routerLink="/" class="retour">&larr; Accueil</a>
+
+    <h1 class="page-title">Renvoyer l'email de vérification</h1>
+
+    @if (envoye()) {
+      <app-alert type="success">Un nouvel email de vérification a été envoyé.</app-alert>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="soumettre()" class="formulaire">
+        <label>
+          Email
+          <input type="email" formControlName="email" />
+        </label>
+
+        @if (erreur()) {
+          <app-alert type="error">{{ erreur() }}</app-alert>
+        }
+
+        <button type="submit" class="btn btn-primary btn-block" [disabled]="enCours()">
+          {{ enCours() ? 'Envoi...' : 'Renvoyer' }}
+        </button>
+      </form>
+    }
+  </div>
+</div>

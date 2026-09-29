@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    # Port 5435, alloue par le service postgres-test de compose.yaml : dedie
+    # aux tests, demarre avec le `docker compose up` habituel (pas de flag
+    # ni de commande separee necessaire).
+    url: jdbc:postgresql://localhost:5435/erp_metier_test
+    username: erp_user
+    password: erp_password
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # jwk-set-uri (au lieu de issuer-uri) : pas de découverte OIDC eager au
+          # démarrage du contexte Spring (JwtDecoders.fromIssuerLocation ferait un
+          # appel réseau vers Keycloak dès la création du bean JwtDecoder, avant
+          # même le premier test). Aucun test de ce projet ne décode réellement un
+          # JWT via ce bean (AuthControllerTest mocke les services concernés), donc
+          # une URI injoignable ne pose problème que si un test venait à l'utiliser
+          # pour de vrai — à revisiter avec un vrai jwk-set-uri statique si un jour
+          # un test a besoin de décoder un token signé.
+          jwk-set-uri: http://localhost:1/jwks-non-utilise-en-test
+
+app:
+  mail:
+    api-base-url: https://api.mail.hostinger.com
+    api-token: test-token
+    mailbox-resource-id: test-mailbox
+    display-name: Test
+  frontend:
+    base-url: http://localhost:3000
+  session:
+    # Clé de test dédiée (32 octets aléatoires, base64) : aucune session réelle
+    # n'est jamais chiffrée avec cette clé, seulement des valeurs éphémères créées
+    # et relues dans le même run de test.
+    encryption-key: 9S4WJUDwlUTMgijIqVdOJDbVMcMGEaYV5OY36OwRZD4=
+    cookie-secure: false
+
+keycloak:
+  realm: erp-comptable
+  auth-server-url: http://localhost:1
+  admin-client-id: api-compta-admin
+  admin-client-secret: test
+  bff-client-id: api-compta-bff
+  bff-client-secret: test

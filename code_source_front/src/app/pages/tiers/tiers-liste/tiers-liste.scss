@@ -1,0 +1,130 @@
+// KPI — 7 cartes (total + 5 types + sans compte associé) : la grille 2fr/1fr/1fr de
+// components.scss est pensée pour 3 cartes, pas adaptée ici, d'où cette grille dédiée.
+.tiers-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.kpi-pastille {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+// KPI "Sans compte associé" — compteur cuivre, attire l'oeil comme un signal à traiter.
+.kpi-card--attention {
+  .kpi-valeur {
+    color: var(--accent);
+  }
+}
+
+// Select de tri dans la toolbar (complète .toolbar de components.scss, pensé pour les inputs)
+.tri-select {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--font-sans);
+}
+
+// Colonnes du tableau des tiers — 1fr 120px 1fr 220px 90px
+.tiers-table {
+  table-layout: fixed;
+
+  th:nth-child(2),
+  td:nth-child(2) {
+    width: 120px;
+  }
+
+  th:nth-child(4),
+  td:nth-child(4) {
+    width: 220px;
+  }
+
+  th:nth-child(5),
+  td:nth-child(5) {
+    width: 90px;
+  }
+}
+
+.tiers-raison {
+  font-weight: 600;
+}
+
+.tiers-sous,
+.tiers-contact-nom + .tiers-sous {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tiers-contact-nom {
+  color: var(--text);
+}
+
+// Compte associé — puce avec actions changer/dissocier
+.compte-associe-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  max-width: 100%;
+}
+
+.compte-associe-numero {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.compte-associe-libelle {
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compte-associe-action {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: var(--border);
+    color: var(--text);
+  }
+}
+
+.compte-associe-vide {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}

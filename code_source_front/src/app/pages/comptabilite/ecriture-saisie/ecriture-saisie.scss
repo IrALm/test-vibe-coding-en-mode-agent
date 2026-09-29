@@ -1,0 +1,189 @@
+.formulaire-ecriture {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// La carte de formulaire laisse de la place en bas pour la barre sticky bandeau+actions.
+.formulaire-ecriture--avec-bandeau {
+  margin-bottom: 86px;
+}
+
+.ligne-entete-champs {
+  display: grid;
+  grid-template-columns: 180px 1fr 2fr;
+  gap: 16px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+.lignes-ecriture {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ligne-ecriture-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-choisir-compte {
+  flex: 2;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+
+  .compte-rail-numero {
+    width: auto;
+    color: var(--accent-on-soft);
+    font-weight: 800;
+  }
+}
+
+.btn-choisir-compte--vide {
+  color: var(--text-faint);
+}
+
+.ligne-champ--sens {
+  flex-shrink: 0;
+
+  .segmented-option {
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+}
+
+.ligne-champ--montant {
+  width: 120px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.ligne-champ--libelle {
+  flex: 1;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  min-width: 0;
+}
+
+.btn-retirer-ligne {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--error-soft);
+    color: var(--error-on-soft);
+  }
+}
+
+.btn-ajouter-ligne {
+  align-self: flex-start;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--accent-soft);
+  background: var(--accent-soft);
+  color: var(--accent-on-soft);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+// Bandeau d'équilibre + actions regroupés dans une barre fixée en bas de l'écran (maquette).
+.bandeau-bas-saisie {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 16px max(24px, calc((100vw - 1040px) / 2 + 24px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  .bandeau-equilibre {
+    flex: 1;
+  }
+}
+
+.bandeau-bas-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+// .bandeau-equilibre est maintenant global (components.scss), utilisé aussi par le détail
+// d'écriture et la balance générale.
+
+// Modale "Choisir un compte" — rail de classes (réutilise .classes-rail) + panneau de comptes.
+.modale--picker-compte {
+  width: 720px;
+}
+
+.picker-compte-corps {
+  display: flex;
+  gap: 16px;
+  min-height: 0;
+}
+
+.picker-compte-rail {
+  width: 230px;
+  flex-shrink: 0;
+
+  .rail-liste {
+    max-height: 340px;
+  }
+}
+
+.picker-compte-liste {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow-y: auto;
+  max-height: 340px;
+}

@@ -1,0 +1,270 @@
+<div class="modale-fond" (click)="demanderFermeture()">
+  <div class="modale modale--formulaire" (click)="$event.stopPropagation()">
+    @if (!succes()) {
+      <button type="button" class="modale-fermer" (click)="demanderFermeture()" aria-label="Fermer">
+        &times;
+      </button>
+      <div class="modale-titre" style="margin-bottom: 2px">Nouveau compte comptable</div>
+      <div class="modale-sous-titre">Plan actif : {{ referentielLibelle() }}</div>
+
+      <div class="stepper">
+        @for (n of [1, 2, 3]; track n) {
+          <div
+            class="step"
+            [class.step--actif]="etape() === n"
+            [class.step--complete]="etape() > n"
+          >
+            <div class="step-cercle">{{ etape() > n ? '✓' : n }}</div>
+            <div class="step-label">
+              {{ n === 1 ? 'Rattachement' : n === 2 ? 'Définition' : 'Options' }}
+            </div>
+          </div>
+          @if (n < 3) {
+            <div class="step-ligne" [class.step-ligne--complete]="etape() > n"></div>
+          }
+        }
+      </div>
+
+      @if (erreurGenerale()) {
+        <app-alert type="error">{{ erreurGenerale() }}</app-alert>
+      }
+
+      @if (etape() === 1) {
+        <div class="formulaire">
+          <label>
+            Classe comptable
+            <select
+              [value]="classeCompteComptableId()"
+              (change)="choisirClasse($any($event.target).value)"
+            >
+              <option value="">— Sélectionnez une classe —</option>
+              @for (c of classes(); track c.id) {
+                <option [value]="c.id">Classe {{ c.numero }} — {{ c.titre }}</option>
+              }
+            </select>
+          </label>
+
+          <label>
+            Compte parent
+            @if (!classeCompteComptableId()) {
+              <select disabled>
+                <option>Sélectionnez d'abord une classe pour charger ses comptes.</option>
+              </select>
+            } @else {
+              <select
+                [value]="parentId()"
+                (change)="choisirParent($any($event.target).value)"
+                [disabled]="chargementComptesParent()"
+              >
+                <option value="">— Aucun (compte racine de la classe) —</option>
+                @for (c of comptesDeClasse(); track c.id) {
+                  <option [value]="c.id">{{ c.numero }} — {{ c.libelle }}</option>
+                }
+              </select>
+            }
+          </label>
+
+          <label>
+            Numéro de compte
+            <input
+              type="text"
+              maxlength="10"
+              [value]="numero()"
+              (input)="onSaisieNumero($any($event.target).value)"
+              [class.champ-invalide]="numero() !== '' && !numeroValideFormat()"
+              placeholder="Ex. 4111"
+            />
+            @if (numero() !== '' && !numeroValideFormat()) {
+              <span class="champ-erreur"
+                >Le numéro ne doit contenir que des chiffres (10 caractères maximum).</span
+              >
+            } @else if (numeroExisteDeja()) {
+              <span class="champ-erreur">Ce numéro existe déjà dans le plan comptable.</span>
+            } @else if (avertissementPrefixe()) {
+              <span class="champ-avertissement">
+                Le numéro ne commence pas par « {{ prefixeAttendu() }} » ({{
+                  parentSelectionne() ? 'numéro du parent' : 'numéro de la classe'
+                }}).
+              </span>
+            } @else if (verificationNumeroEnCours()) {
+              <span class="champ-info">Vérification…</span>
+            }
+          </label>
+        </div>
+      }
+
+      @if (etape() === 2) {
+        <div class="formulaire">
+          <label>
+            Libellé
+            <input
+              type="text"
+              [value]="libelle()"
+              (input)="libelle.set($any($event.target).value)"
+              placeholder="Ex. Clients divers"
+            />
+          </label>
+
+          <div class="champ-groupe-label">Sens normal</div>
+          @if (sensVerrouille()) {
+            <span class="champ-info">
+              Déterminé par le compte parent ({{ parentSelectionne()?.numero }}) — non modifiable.
+            </span>
+          }
+          <div class="segmented">
+            <button
+              type="button"
+              class="segmented-option"
+              [class.actif]="sensNormal() === 'DEBIT'"
+              [disabled]="sensVerrouille()"
+              (click)="choisirSens('DEBIT')"
+            >
+              <div class="segmented-option-titre">DÉBIT</div>
+              <div class="segmented-option-sous">Emplois · actif · charges</div>
+            </button>
+            <button
+              type="button"
+              class="segmented-option"
+              [class.actif]="sensNormal() === 'CREDIT'"
+              [disabled]="sensVerrouille()"
+              (click)="choisirSens('CREDIT')"
+            >
+              <div class="segmented-option-titre">CRÉDIT</div>
+              <div class="segmented-option-sous">Ressources · passif · produits</div>
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (etape() === 3) {
+        <div class="formulaire">
+          <div class="toggle-row">
+            <span class="toggle-label">Lettrable</span>
+            <label class="switch">
+              <input type="checkbox" [checked]="lettrable()" (change)="toggleLettrable()" />
+              <span class="switch-track"><span class="switch-thumb"></span></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">Actif</span>
+            <label class="switch">
+              <input type="checkbox" [checked]="actif()" (change)="toggleActif()" />
+              <span class="switch-track"><span class="switch-thumb"></span></span>
+            </label>
+          </div>
+
+          <div class="recap-card">
+            <div class="recap-ligne">
+              <span>Classe</span>
+              <span class="recap-valeur">
+                @if (classeSelectionnee(); as classe) {
+                  Classe {{ classe.numero }} — {{ classe.titre }}
+                } @else {
+                  —
+                }
+              </span>
+            </div>
+            <div class="recap-ligne">
+              <span>Compte parent</span>
+              <span class="recap-valeur">
+                @if (parentSelectionne(); as parent) {
+                  {{ parent.numero }} — {{ parent.libelle }}
+                } @else {
+                  Aucun (compte racine)
+                }
+              </span>
+            </div>
+            <div class="recap-ligne">
+              <span>Numéro</span>
+              <span class="recap-valeur tabular-nums">{{ numero() }}</span>
+            </div>
+            <div class="recap-ligne">
+              <span>Libellé</span>
+              <span class="recap-valeur">{{ libelle() }}</span>
+            </div>
+            <div class="recap-ligne">
+              <span>Sens normal</span>
+              <span
+                class="badge-sens"
+                [class.badge-sens--debit]="sensNormal() === 'DEBIT'"
+                [class.badge-sens--credit]="sensNormal() === 'CREDIT'"
+              >
+                {{ sensNormal() === 'DEBIT' ? 'DÉBIT' : 'CRÉDIT' }}
+              </span>
+            </div>
+            <div class="recap-ligne">
+              <span>Lettrable</span>
+              <span class="recap-valeur">{{ lettrable() ? 'Oui' : 'Non' }}</span>
+            </div>
+            <div class="recap-ligne">
+              <span>Statut</span>
+              <app-status-badge [tone]="actif() ? 'success' : 'neutral'">
+                {{ actif() ? 'Actif' : 'Inactif' }}
+              </app-status-badge>
+            </div>
+          </div>
+        </div>
+      }
+
+      <div class="modale-formulaire-actions">
+        @if (etape() > 1) {
+          <button type="button" class="btn btn-secondary" (click)="precedent()">← Précédent</button>
+        } @else {
+          <span></span>
+        }
+        @if (etape() < 3) {
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="!etapeValide()"
+            (click)="suivant()"
+          >
+            Suivant →
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="enCoursCreation()"
+            (click)="creerCompte()"
+          >
+            {{ enCoursCreation() ? 'Création…' : 'Créer le compte' }}
+          </button>
+        }
+      </div>
+    } @else {
+      <div class="succes-ecran">
+        <div class="succes-icone">✓</div>
+        <div class="succes-titre">Compte comptable créé</div>
+        <div class="succes-actions">
+          <button type="button" class="btn btn-secondary" (click)="creerUnAutre()">
+            Créer un autre compte
+          </button>
+          <button type="button" class="btn btn-primary" (click)="voirPlanComptable()">
+            Voir le plan comptable
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+@if (confirmationFermeture()) {
+  <div class="modale-fond" (click)="annulerFermeture()">
+    <div class="modale" (click)="$event.stopPropagation()">
+      <div class="modale-titre">Abandonner la création ?</div>
+      <p class="modale-message">
+        Le formulaire contient des informations non enregistrées. Elles seront perdues si vous
+        fermez maintenant.
+      </p>
+      <div class="modale-actions">
+        <button type="button" class="btn btn-secondary" (click)="annulerFermeture()">
+          Continuer la saisie
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmerFermeture()">
+          Fermer sans enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+}

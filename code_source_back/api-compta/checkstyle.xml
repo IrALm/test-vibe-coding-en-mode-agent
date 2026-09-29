@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+Ruleset volontairement restreint à des règles à forte valeur (bugs probables,
+pas de style cosmétique) : voir doc/ci.md pour la justification. Ne pas ajouter
+Sun/Google checks complet sans en discuter — ça générerait un mur de violations
+sur le code existant sans rapport avec ce que ce ruleset cherche à attraper.
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+
+    <module name="TreeWalker">
+        <!-- Imports. Pas d'AvoidStarImport : ce projet utilise systématiquement
+        `import jakarta.persistence.*;` / `import lombok.*;` sur ses entités JPA
+        (convention établie, cf. toutes les classes entity/**) - un bloqueur ici
+        ferait échouer 13+ fichiers pour un choix de style assumé, pas un bug. -->
+        <module name="RedundantImport"/>
+        <module name="UnusedImports"/>
+
+        <!-- Bugs probables -->
+        <module name="EmptyCatchBlock">
+            <property name="exceptionVariableName" value="expected|ignored"/>
+        </module>
+        <module name="EqualsHashCode"/>
+        <module name="EqualsAvoidNull"/>
+        <module name="StringLiteralEquality"/>
+        <module name="OneTopLevelClass"/>
+        <module name="OuterTypeFilename"/>
+
+        <!-- Ne pas laisser du println dans du code applicatif : ce projet log
+        via SLF4J partout ailleurs. -->
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="System\.(out|err)\.print"/>
+            <property name="message" value="Utiliser un logger SLF4J plutôt que System.out/err."/>
+        </module>
+    </module>
+</module>

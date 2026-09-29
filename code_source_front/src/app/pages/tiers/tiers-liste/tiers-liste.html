@@ -1,0 +1,218 @@
+<div class="page-shell">
+  <a routerLink="/" class="retour">&larr; Accueil</a>
+
+  <div class="page-header">
+    <h1 class="page-title" style="margin: 0">Tiers</h1>
+    @if (peutGererTiers()) {
+      <button type="button" class="btn btn-primary" (click)="ouvrirModaleCreation()">
+        + Nouveau tiers
+      </button>
+    }
+  </div>
+
+  @if (erreurRecap()) {
+    <app-alert type="error">{{ erreurRecap() }}</app-alert>
+  }
+
+  @if (recap(); as r) {
+    <div class="tiers-kpi-grid">
+      <div class="card kpi-card">
+        <div class="kpi-label">Total tiers</div>
+        <div class="kpi-valeur tabular-nums">{{ r.total }}</div>
+      </div>
+      @for (k of kpiParType(); track k.type) {
+        <div class="card kpi-card">
+          <div class="kpi-label">
+            <span class="kpi-pastille" [style.background]="k.couleur"></span>
+            {{ k.libelle }}
+          </div>
+          <div class="kpi-valeur tabular-nums">{{ k.total }}</div>
+        </div>
+      }
+      <div class="card kpi-card kpi-card--attention">
+        <div class="kpi-label">Sans compte associé</div>
+        <div class="kpi-valeur tabular-nums">{{ r.sansCompteAssocie }}</div>
+      </div>
+    </div>
+  }
+
+  <div class="table-panel">
+    <div class="toolbar">
+      <input
+        type="search"
+        [value]="query()"
+        (input)="onSaisieRecherche($any($event.target).value)"
+        placeholder="Rechercher par raison sociale, contact, e-mail ou n° fiscal…"
+      />
+      <select class="tri-select" [value]="sort()" (change)="changerTri($any($event.target).value)">
+        <option value="raison,asc">Raison sociale A→Z</option>
+        <option value="raison,desc">Raison sociale Z→A</option>
+        <option value="type">Type</option>
+        <option value="statut">Statut (actifs d'abord)</option>
+      </select>
+    </div>
+
+    <div class="toolbar">
+      <div class="chip-group">
+        <button type="button" class="chip" [class.actif]="typeFiltre() === ''" (click)="filtrerParType('')">
+          Tous
+        </button>
+        @for (t of typesTiers; track t) {
+          <button
+            type="button"
+            class="chip"
+            [class.actif]="typeFiltre() === t"
+            (click)="filtrerParType(t)"
+          >
+            {{ libellesType[t] }}
+          </button>
+        }
+      </div>
+      <div class="chip-group">
+        <button
+          type="button"
+          class="chip"
+          [class.actif]="statutFiltre() === ''"
+          (click)="filtrerParStatut('')"
+        >
+          Tous statuts
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.actif]="statutFiltre() === 'true'"
+          (click)="filtrerParStatut('true')"
+        >
+          Actifs
+        </button>
+        <button
+          type="button"
+          class="chip"
+          [class.actif]="statutFiltre() === 'false'"
+          (click)="filtrerParStatut('false')"
+        >
+          Inactifs
+        </button>
+      </div>
+    </div>
+
+    @if (erreur()) {
+      <app-alert type="error">{{ erreur() }}</app-alert>
+    }
+
+    <table class="table-dense tiers-table">
+      <thead>
+        <tr>
+          <th>Tiers</th>
+          <th>Type</th>
+          <th>Contact</th>
+          <th>Compte associé</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (t of tiers(); track t.id) {
+          <tr>
+            <td>
+              <div class="tiers-raison">{{ t.raisonSociale }}</div>
+              <div class="tiers-sous">{{ t.numeroFiscal || t.adresse || '—' }}</div>
+            </td>
+            <td>
+              <app-type-tiers-badge [type]="t.type" />
+            </td>
+            <td>
+              <div class="tiers-contact-nom">{{ t.nomContact || '—' }}</div>
+              <div class="tiers-sous">{{ t.email || t.telephone || '' }}</div>
+            </td>
+            <td>
+              @if (t.compteAssocieId) {
+                <div class="compte-associe-chip">
+                  <span class="compte-associe-numero tabular-nums">{{ t.compteAssocieNumero }}</span>
+                  <span class="compte-associe-libelle">{{ t.compteAssocieLibelle }}</span>
+                  @if (peutGererTiers()) {
+                    <button
+                      type="button"
+                      class="compte-associe-action"
+                      title="Changer le compte associé"
+                      (click)="ouvrirAssociation(t)"
+                    >
+                      &#8635;
+                    </button>
+                    <button
+                      type="button"
+                      class="compte-associe-action"
+                      title="Dissocier"
+                      (click)="demanderDissociation(t)"
+                    >
+                      &times;
+                    </button>
+                  }
+                </div>
+              } @else if (peutGererTiers()) {
+                <button type="button" class="compte-associe-vide" (click)="ouvrirAssociation(t)">
+                  + Associer
+                </button>
+              } @else {
+                <span class="tiers-sous">—</span>
+              }
+            </td>
+            <td>
+              <app-status-badge [tone]="t.actif ? 'success' : 'neutral'">
+                {{ t.actif ? 'Actif' : 'Inactif' }}
+              </app-status-badge>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="aucun-resultat">
+              {{ enCours() ? 'Chargement…' : 'Aucun tiers ne correspond.' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="table-pagination">
+      <span>Page {{ pageAffichee() }} / {{ totalPages() }} &middot; {{ totalElements() }} tiers</span>
+      <div class="pager">
+        <button type="button" [disabled]="estPremierePage()" (click)="pagePrecedente()">&lsaquo;</button>
+        <button type="button" [disabled]="estDernierePage()" (click)="pageSuivante()">&rsaquo;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (modaleCreationOuverte()) {
+  <app-tiers-creation-modal (ferme)="fermerModaleCreation()" (tiersCree)="onTiersCree()" />
+}
+
+@if (tiersPourAssociation(); as t) {
+  <app-tiers-association-modal
+    [tiers]="t"
+    (ferme)="fermerAssociation()"
+    (associe)="onCompteAssocie($event)"
+  />
+}
+
+@if (confirmationDissociation(); as t) {
+  <div class="modale-fond" (click)="annulerDissociation()">
+    <div class="modale" (click)="$event.stopPropagation()">
+      <div class="modale-titre">Dissocier le compte comptable ?</div>
+      <p class="modale-message">
+        {{ t.raisonSociale }} n'aura plus de compte collectif associé. Vous pourrez en associer un
+        nouveau à tout moment.
+      </p>
+      <div class="modale-actions">
+        <button type="button" class="btn btn-secondary" (click)="annulerDissociation()">Annuler</button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          [disabled]="enCoursDissociation()"
+          (click)="confirmerDissociation()"
+        >
+          {{ enCoursDissociation() ? 'Dissociation…' : 'Dissocier' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

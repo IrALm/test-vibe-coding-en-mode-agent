@@ -1,0 +1,237 @@
+<div class="page-shell">
+  <div class="fil-ariane">
+    <a routerLink="/comptabilite">Comptabilité</a> /
+    <a routerLink="/comptabilite/ecritures">Écritures</a> /
+    {{ modeEdition() ? 'Modifier le brouillon' : 'Nouvelle écriture' }}
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title" style="margin: 0">
+        {{ modeEdition() ? 'Modifier le brouillon' : 'Nouvelle écriture' }}
+      </h1>
+      @if (exerciceOuvert(); as ex) {
+        <p class="page-intro" style="margin: 3px 0 0">
+          Journal général — exercice {{ ex.dateDebut | date: 'dd/MM/yyyy' }} &ndash; {{ ex.dateFin | date: 'dd/MM/yyyy' }} (ouvert)
+        </p>
+      }
+    </div>
+  </div>
+
+  @if (erreur()) {
+    <app-alert type="error">{{ erreur() }}</app-alert>
+  }
+
+  @if (!enCoursChargement() && !erreur()) {
+    <div class="card formulaire-ecriture formulaire-ecriture--avec-bandeau">
+      <div class="formulaire ligne-entete-champs">
+        <label>
+          Date
+          <app-date-picker
+            [(value)]="date"
+            [min]="exerciceOuvert()?.dateDebut"
+            [max]="exerciceOuvert()?.dateFin"
+          />
+        </label>
+        <label>
+          Référence pièce
+          <input
+            type="text"
+            [value]="reference()"
+            (input)="reference.set($any($event.target).value)"
+            placeholder="N° facture, reçu…"
+          />
+        </label>
+        <label>
+          Libellé
+          <input type="text" [value]="libelle()" (input)="libelle.set($any($event.target).value)" />
+        </label>
+      </div>
+
+      <div class="lignes-ecriture">
+        @for (l of lignes(); track l.id) {
+          <div class="ligne-ecriture-row">
+            <button
+              type="button"
+              class="btn-choisir-compte"
+              [class.btn-choisir-compte--vide]="!l.compteId"
+              (click)="ouvrirPicker(l.id)"
+            >
+              @if (l.compteId) {
+                <span class="compte-rail-numero">{{ l.compteNumero }}</span>
+                <span>{{ l.compteLibelle }}</span>
+              } @else {
+                <span>Choisir un compte…</span>
+              }
+            </button>
+            <div class="segmented ligne-champ--sens">
+              <button
+                type="button"
+                class="segmented-option"
+                [class.actif]="l.sens === 'DEBIT'"
+                (click)="choisirSens(l.id, 'DEBIT')"
+              >
+                Débit
+              </button>
+              <button
+                type="button"
+                class="segmented-option"
+                [class.actif]="l.sens === 'CREDIT'"
+                (click)="choisirSens(l.id, 'CREDIT')"
+              >
+                Crédit
+              </button>
+            </div>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              class="ligne-champ--montant tabular-nums"
+              placeholder="Montant"
+              [value]="l.montant ?? ''"
+              (input)="changerMontant(l.id, $any($event.target).value)"
+            />
+            <input
+              type="text"
+              class="ligne-champ--libelle"
+              placeholder="Libellé (optionnel)"
+              [value]="l.libelle"
+              (input)="changerLibelleLigne(l.id, $any($event.target).value)"
+            />
+            @if (lignes().length > 2) {
+              <button
+                type="button"
+                class="btn-retirer-ligne"
+                title="Retirer la ligne"
+                (click)="retirerLigne(l.id)"
+              >
+                &times;
+              </button>
+            }
+          </div>
+        }
+      </div>
+      <button type="button" class="btn-ajouter-ligne" (click)="ajouterLigne()">
+        + Ajouter une ligne
+      </button>
+
+      @if (erreurEnregistrement()) {
+        <app-alert type="error">{{ erreurEnregistrement() }}</app-alert>
+      }
+    </div>
+
+    <div class="bandeau-bas-saisie">
+      <div class="bandeau-equilibre" [class.bandeau-equilibre--ok]="equilibree()">
+        <span>Σ Débits <strong class="tabular-nums">{{ formaterMontant(totalDebit()) }}</strong></span>
+        <span>Σ Crédits <strong class="tabular-nums">{{ formaterMontant(totalCredit()) }}</strong></span>
+        <span>
+          {{ equilibree() ? 'Équilibrée' : 'Écart : ' + formaterMontant(ecart()) }}
+        </span>
+      </div>
+      <div class="bandeau-bas-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          [disabled]="enCoursEnregistrement()"
+          (click)="enregistrerBrouillon()"
+        >
+          Enregistrer en brouillon
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="!equilibree() || enCoursEnregistrement()"
+          (click)="demanderSoumission()"
+        >
+          Soumettre à validation
+        </button>
+      </div>
+    </div>
+  }
+</div>
+
+@if (ligneEnCoursPicker(); as ligne) {
+  <div class="modale-fond" (click)="fermerPicker()">
+    <div class="modale modale--picker-compte" (click)="$event.stopPropagation()">
+      <div class="modale-titre" style="margin-bottom: 16px">Choisir un compte</div>
+      <div class="picker-compte-corps">
+        <aside class="classes-rail picker-compte-rail">
+          <div class="rail-liste">
+            @for (c of classes(); track c.id) {
+              <button
+                type="button"
+                class="classe-item"
+                [class.actif]="ligne.classeId === c.id"
+                (click)="choisirClasseDansPicker(c.id)"
+              >
+                <span class="classe-pastille tabular-nums">{{ c.numero }}</span>
+                <span class="classe-texte"><span class="classe-titre">{{ c.titre }}</span></span>
+              </button>
+            }
+          </div>
+        </aside>
+        <div class="picker-compte-liste">
+          @if (!ligne.classeId) {
+            <div class="rail-vide">Sélectionnez une classe à gauche.</div>
+          } @else if (ligne.chargementComptes) {
+            <div class="rail-vide">Chargement…</div>
+          } @else {
+            @for (c of ligne.comptes; track c.id) {
+              <button
+                type="button"
+                class="compte-rail-item"
+                [class.actif]="ligne.compteId === c.id"
+                (click)="choisirCompteDansPicker(c)"
+              >
+                <span class="compte-rail-numero">{{ c.numero }}</span>
+                <span class="compte-rail-libelle">{{ c.libelle }}</span>
+              </button>
+            } @empty {
+              <div class="rail-vide">Aucun compte dans cette classe.</div>
+            }
+          }
+        </div>
+      </div>
+      <div class="modale-actions" style="margin-top: 16px">
+        <button type="button" class="btn btn-secondary" (click)="fermerPicker()">Fermer</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (confirmationSoumission()) {
+  <div class="modale-fond" (click)="annulerSoumission()">
+    <div class="modale" (click)="$event.stopPropagation()">
+      <div class="modale-titre">Soumettre cette écriture à validation ?</div>
+      <div class="card" style="margin-bottom: 16px">
+        <p class="entreprise-ligne">
+          <span>Libellé</span>
+          <span class="entreprise-valeur">{{ libelle() }}</span>
+        </p>
+        <p class="entreprise-ligne">
+          <span>Référence</span>
+          <span class="entreprise-valeur">{{ reference() }}</span>
+        </p>
+        <p class="entreprise-ligne">
+          <span>Montant</span>
+          <span class="entreprise-valeur tabular-nums">{{ formaterMontant(totalDebit()) }}</span>
+        </p>
+      </div>
+      <app-alert type="warning">
+        Une fois soumise, l'écriture attend la validation d'un administrateur et ne peut plus être
+        modifiée tant qu'elle n'a pas été renvoyée en brouillon.
+      </app-alert>
+      <div class="modale-actions" style="margin-top: 16px">
+        <button type="button" class="btn btn-secondary" (click)="annulerSoumission()">Annuler</button>
+        <button
+          type="button"
+          class="btn btn-succes"
+          [disabled]="enCoursEnregistrement()"
+          (click)="confirmerSoumission()"
+        >
+          &check; Confirmer et soumettre
+        </button>
+      </div>
+    </div>
+  </div>
+}

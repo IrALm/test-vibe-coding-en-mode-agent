@@ -1,0 +1,102 @@
+@keyframes row-flash-actif {
+  0% {
+    background: var(--surface);
+  }
+  30% {
+    background: var(--success-soft);
+  }
+  100% {
+    background: var(--surface);
+  }
+}
+
+@keyframes row-flash-inactif {
+  0% {
+    background: var(--surface);
+  }
+  30% {
+    background: var(--error-soft);
+  }
+  100% {
+    background: var(--surface);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+tr.row-flash-actif td {
+  animation: row-flash-actif 0.9s ease;
+}
+
+tr.row-flash-inactif td {
+  animation: row-flash-inactif 0.9s ease;
+}
+
+.btn-activer {
+  background: var(--success);
+  color: var(--text-on-accent);
+}
+
+.btn-desactiver {
+  background: var(--accent-soft);
+  color: var(--accent-on-soft);
+  border: 1px solid var(--accent);
+}
+
+// Toast
+.toast {
+  position: fixed;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px 12px 18px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  font-size: 14px;
+  font-weight: 600;
+  animation: toast-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast button {
+  height: 30px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: oklch(0 0 0 / 0.1);
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+// Succès / erreur suivent la convention "soft + on-soft" déjà utilisée par
+// app-alert et app-status-badge (garantit un bon contraste en clair et sombre).
+.toast-success {
+  background: var(--success-soft);
+  color: var(--success-on-soft);
+}
+
+.toast-error {
+  background: var(--error-soft);
+  color: var(--error-on-soft);
+}
+
+// Pas d'équivalent "neutre" soft/on-soft dans les tokens : on inverse texte/fond
+// de la page pour un bandeau neutre à contraste garanti dans les deux thèmes.
+.toast-neutral {
+  background: var(--text);
+  color: var(--bg);
+}

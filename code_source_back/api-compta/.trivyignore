@@ -1,0 +1,3 @@
+# CVE explicitement acceptées après revue. Une ligne = un ID + justification + date.
+# Vide par défaut : garde-fou documenté plutôt qu'un assouplissement global de
+# --severity/--ignore-unfixed dans .gitlab-ci.yml à chaque exception rencontrée.

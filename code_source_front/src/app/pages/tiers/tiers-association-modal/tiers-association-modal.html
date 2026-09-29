@@ -1,0 +1,98 @@
+<div class="modale-fond" (click)="fermer()">
+  <div class="modale modale--association" (click)="$event.stopPropagation()">
+    <button type="button" class="modale-fermer" (click)="fermer()" aria-label="Fermer">&times;</button>
+    <div class="modale-titre" style="margin-bottom: 2px">Associer un compte comptable</div>
+    <div class="modale-sous-titre">
+      {{ tiers().raisonSociale }}
+      @if (tiers().compteAssocieId) {
+        &middot; Compte actuel : {{ tiers().compteAssocieNumero }} — {{ tiers().compteAssocieLibelle }}
+      }
+    </div>
+
+    @if (erreur()) {
+      <app-alert type="error">{{ erreur() }}</app-alert>
+    }
+
+    <div class="association-corps">
+      <aside class="classes-rail">
+        <div class="rail-recherche">
+          <input
+            type="search"
+            [value]="queryClasses()"
+            (input)="onSaisieRechercheClasses($any($event.target).value)"
+            placeholder="Rechercher une classe…"
+          />
+        </div>
+        <div class="rail-liste">
+          @for (c of classes(); track c.id) {
+            <button
+              type="button"
+              class="classe-item"
+              [class.actif]="classeSelectionneeId() === c.id"
+              (click)="selectionnerClasse(c)"
+            >
+              <span class="classe-pastille tabular-nums">{{ c.numero }}</span>
+              <span class="classe-texte">
+                <span class="classe-titre">{{ c.titre }}</span>
+              </span>
+            </button>
+          } @empty {
+            <div class="rail-vide">Aucune classe.</div>
+          }
+        </div>
+      </aside>
+
+      <section class="comptes-panneau-association">
+        @if (classeSelectionnee(); as classe) {
+          <div class="rail-recherche">
+            <input
+              type="search"
+              [value]="queryComptes()"
+              (input)="onSaisieRechercheComptes($any($event.target).value)"
+              placeholder="Rechercher par numéro ou libellé…"
+            />
+          </div>
+
+          <div class="comptes-liste-radio">
+            @for (c of comptes(); track c.id) {
+              <label class="compte-radio-item" [class.actif]="compteSelectionneId() === c.id">
+                <input
+                  type="radio"
+                  name="compte-associe"
+                  [checked]="compteSelectionneId() === c.id"
+                  (change)="selectionnerCompte(c.id)"
+                />
+                <span class="compte-radio-numero tabular-nums">{{ c.numero }}</span>
+                <span class="compte-radio-libelle">{{ c.libelle }}</span>
+              </label>
+            } @empty {
+              <div class="rail-vide">
+                {{ enCoursComptes() ? 'Chargement…' : 'Aucun compte ne correspond.' }}
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="rail-vide">Sélectionnez d'abord une classe.</div>
+        }
+      </section>
+    </div>
+
+    <div class="modale-formulaire-actions">
+      <span class="association-selection">
+        @if (compteSelectionne(); as c) {
+          Compte sélectionné : <strong>{{ c.numero }} — {{ c.libelle }}</strong>
+        } @else {
+          Aucun compte sélectionné
+        }
+      </span>
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="!compteSelectionneId() || enCoursAssociation()"
+        (click)="associerCompte()"
+      >
+        {{ enCoursAssociation() ? 'Association…' : 'Associer le compte' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,15 @@
+<div class="auth-shell">
+  <div class="auth-card">
+    <a routerLink="/" class="retour">&larr; Accueil</a>
+
+    <h1 class="page-title">Vérification d'email</h1>
+
+    @if (enCours()) {
+      <p class="page-intro">Vérification en cours...</p>
+    } @else if (succes()) {
+      <app-alert type="success">Email vérifié avec succès.</app-alert>
+    } @else {
+      <app-alert type="error">{{ erreur() }}</app-alert>
+    }
+  </div>
+</div>

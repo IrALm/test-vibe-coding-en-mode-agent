@@ -1,0 +1,337 @@
+# Pipeline api-compta — voir doc/ci.md pour la justification détaillée de chaque
+# décision (pourquoi tel stage, tel déclencheur, telle exception).
+#
+#   .pre  → build → test → package → security
+#
+# Principe directeur : ne jamais revalider ce qui a déjà été validé par une
+# pipeline précédente. Concrètement, sur les 3 transitions du flux de branches
+# (cf. branch-flow-guard) :
+#   - * → develop        : build/test/package/security tournent intégralement —
+#     c'est la PREMIÈRE fois que ce code est validé.
+#   - develop → test      : AUCUN de ces jobs ne retourne. Le contenu de cette MR
+#     a déjà été validé, commit par commit, par les pipelines qui l'ont fait
+#     atterrir sur develop — le revalider ici ne détecterait rien de nouveau.
+#     Seul `branch-flow-guard` tourne. Une fois l'infra/la CD en place, c'est ICI
+#     que viendra le déploiement vers l'environnement de recette (réutilisant
+#     l'artefact déjà construit, sans rien reconstruire).
+#   - test → main         : même raisonnement, seul `branch-flow-guard` tourne.
+#   - tag vX.Y.Z          : relance TOUT depuis zéro (build/test/package/security),
+#     et c'est aussi là que `package`/`security` publient réellement (push +
+#     signature) — dernier filet avant que l'image n'existe sur le registry.
+#
+# Un push nu sur develop/test/main ne déclenche aucune pipeline (le contenu a
+# déjà été validé par la MR qui l'y a fait entrer).
+#
+# Déploiement (CD) volontairement absent : pas d'infra cible pour le moment.
+# À ajouter plus tard sur develop → test (recette) et sur le tag (prod), cf.
+# doc/ci.md.
+
+stages:
+  - build
+  - test
+  - package
+  - security
+
+default:
+  interruptible: true
+
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+
+# Tourne sur un tag, ou sur une MR dont la cible est develop (la toute première
+# validation de ce code). Ne tourne PAS sur une MR develop → test ou test → main
+# : ce contenu a déjà été validé, cf. en-tête du fichier.
+.validate_rules: &validate_rules
+  - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"'
+
+# Sous-ensemble de .validate_rules : uniquement sur tag (publication réelle).
+.tag_only: &tag_only
+  - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+
+.maven_cache: &maven_cache
+  key:
+    files:
+      - pom.xml
+  paths:
+    - .m2/repository
+
+# ---------------------------------------------------------------------------
+# .pre — garde-fou de flux de branches (feature/* → develop, develop → test,
+# test → main). Tourne sur TOUTE MR quelle que soit sa cible (contrairement aux
+# autres jobs, cf. .validate_rules) : il doit gater develop → test et test →
+# main aussi, même si ces deux transitions ne relancent plus rien d'autre.
+# Ne bloque que les MR ciblant develop/test/main ; une MR vers une autre
+# branche (ex. feature → feature) n'est pas couverte par cette règle et passe
+# sans vérification. Sans objet sur un pipeline de tag (pas une MR).
+# ---------------------------------------------------------------------------
+
+branch-flow-guard:
+  stage: .pre
+  image: alpine:3
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  script:
+    - |
+      SRC="$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
+      TGT="$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+      case "$TGT" in
+        develop)
+          echo "OK: $SRC -> develop (toute source autorisée)."
+          ;;
+        test)
+          if [ "$SRC" != "develop" ]; then
+            echo "Flux de branches invalide : seule develop -> test est autorisée (source recue: $SRC)." >&2
+            exit 1
+          fi
+          echo "OK: develop -> test."
+          ;;
+        main)
+          if [ "$SRC" != "test" ]; then
+            echo "Flux de branches invalide : seule test -> main est autorisée (source recue: $SRC)." >&2
+            exit 1
+          fi
+          echo "OK: test -> main."
+          ;;
+        *)
+          echo "Cible '$TGT' hors du flux develop/test/main, aucune règle à appliquer."
+          ;;
+      esac
+
+# ---------------------------------------------------------------------------
+# build — compile le jar (tests sautés), une seule fois par pipeline.
+# ---------------------------------------------------------------------------
+
+build:
+  stage: build
+  image: maven:3.9.9-eclipse-temurin-21
+  rules: *validate_rules
+  cache:
+    <<: *maven_cache
+  script:
+    - mvn -B -ntp package -DskipTests
+  artifacts:
+    paths:
+      - target/*.jar
+    expire_in: 1 day
+
+# ---------------------------------------------------------------------------
+# test — lint, tests + couverture, scans (parallèles)
+# ---------------------------------------------------------------------------
+
+lint:
+  stage: test
+  image: maven:3.9.9-eclipse-temurin-21
+  rules: *validate_rules
+  cache:
+    <<: *maven_cache
+  script:
+    - mvn -B -ntp checkstyle:check
+
+test:
+  stage: test
+  image: maven:3.9.9-eclipse-temurin-21
+  rules: *validate_rules
+  services:
+    - name: postgres:16.4-alpine
+      alias: postgres
+  variables:
+    POSTGRES_DB: erp_metier_test
+    POSTGRES_USER: erp_user
+    POSTGRES_PASSWORD: erp_password
+    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/erp_metier_test
+    SPRING_DATASOURCE_USERNAME: erp_user
+    SPRING_DATASOURCE_PASSWORD: erp_password
+  cache:
+    <<: *maven_cache
+  script:
+    # Profil `test` (src/test/resources/application-test.yaml) : jwk-set-uri
+    # statique au lieu d'issuer-uri, pas de découverte OIDC eager vers un
+    # Keycloak qui n'existe pas dans ce job (cf. doc/ci.md). Seul Postgres est
+    # nécessaire pour les 2 tests @SpringBootTest (Flyway + JPA réels) ; les
+    # 92 autres sont de purs tests Mockito, sans dépendance externe.
+    # @jacoco-check cible explicitement l'execution du meme nom dans pom.xml :
+    # un appel direct du goal (sans passer par la phase verify) utilise sinon
+    # une execution "default-cli" vide, qui n'a pas les <rules> configurees.
+    - mvn -B -ntp test jacoco:report jacoco:check@jacoco-check
+  artifacts:
+    when: always
+    reports:
+      junit: target/surefire-reports/TEST-*.xml
+    paths:
+      - target/site/jacoco/
+    expire_in: 1 week
+
+trivy-fs:
+  stage: test
+  image:
+    name: aquasec/trivy:latest
+    # L'image officielle a un ENTRYPOINT sur le binaire trivy lui-meme (pas un
+    # shell) : sans le vider, GitLab passe son script comme argument a trivy
+    # ("unknown command sh for trivy") au lieu de l'executer via sh.
+    entrypoint: [""]
+  rules: *validate_rules
+  dependencies: []
+  variables:
+    TRIVY_CACHE_DIR: .trivycache/
+  cache:
+    key: trivy-db
+    paths:
+      - .trivycache/
+  script:
+    # --skip-files pom.xml : Trivy tente de resoudre l'arbre effectif des
+    # dependances (parents/BOM en scope import) directement contre Maven
+    # Central des qu'un pom.xml est present, quel que soit le --scanners
+    # choisi (meme misconfig seul declenche la resolution) - verifie
+    # empiriquement le 2026-09-08 : meme un ~/.m2/repository local
+    # entierement pre-rempli (mvn dependency:resolve) ne suffit pas a
+    # eviter l'appel reseau, Trivy redemande des POM (BOM en particulier)
+    # que Maven n'a aucune raison de telecharger lui-meme. Sur les runners
+    # SaaS GitLab (IP partagee entre projets/utilisateurs), ça declenche un
+    # 429 Too Many Requests qui bloque toute la CI. Couverture des CVE Java
+    # non perdue : trivy-image-api (stage security) scanne le jar/l'image
+    # deja construite, sans resolution reseau (les dependances sont deja
+    # physiquement presentes dans l'artefact).
+    # Rapport large (CRITICAL+HIGH), non bloquant, pour la visibilité.
+    - trivy fs --scanners vuln,misconfig --skip-files "pom.xml" --severity CRITICAL,HIGH
+        --ignore-unfixed --exit-code 0 --format template --template "@/contrib/gitlab.tpl"
+        --output gl-dependency-scanning-report.json .
+    # Gate bloquant : seulement les CVE CRITICAL avec correctif disponible.
+    - trivy fs --scanners vuln,misconfig --skip-files "pom.xml" --severity CRITICAL
+        --ignore-unfixed --exit-code 1 .
+  artifacts:
+    when: always
+    reports:
+      dependency_scanning: gl-dependency-scanning-report.json
+
+semgrep:
+  stage: test
+  image: semgrep/semgrep:latest
+  rules: *validate_rules
+  dependencies: []
+  script:
+    # Scope volontaire à src/main/java : le code livré, pas les tests ni les
+    # classes générées (MapStruct/Lombok n'existent qu'après compilation, hors
+    # de ce scan de sources).
+    - semgrep scan --config p/java --config p/security-audit --error
+        --exclude "src/test/**" src/main/java
+
+# ---------------------------------------------------------------------------
+# package — construit l'image (MR → develop, ou tag). Ne pousse vers le
+# registry, ne (re)tag `buildcache`, que sur un pipeline de tag ($CI_COMMIT_TAG
+# défini) — une MR ne publie jamais rien. L'image est systématiquement
+# sauvegardée en tarball (`docker save`), consommée par le stage `security`
+# suivant sans jamais avoir besoin du registry.
+# ---------------------------------------------------------------------------
+
+build-api-image:
+  stage: package
+  image: docker:27
+  services:
+    - docker:27-dind
+  rules: *validate_rules
+  needs:
+    - job: build
+      artifacts: true
+  script:
+    - |
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+        docker pull "$CI_REGISTRY_IMAGE:buildcache" || true
+      fi
+    - docker build --cache-from "$CI_REGISTRY_IMAGE:buildcache" -t app:local .
+    - docker save app:local -o api-image.tar
+    - |
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        docker tag app:local "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+        docker tag app:local "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
+        docker tag app:local "$CI_REGISTRY_IMAGE:buildcache"
+        docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+        docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
+        docker push "$CI_REGISTRY_IMAGE:buildcache"
+        docker manifest inspect "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG" > /dev/null
+      fi
+  artifacts:
+    paths:
+      - api-image.tar
+    expire_in: 1 day
+
+# ---------------------------------------------------------------------------
+# security — scan de l'image buildée + SBOM (MR → develop, ou tag), à partir
+# du tarball, jamais du registry : aucun credential registry nécessaire ici.
+# Signature cosign réservée au tag : signer suppose une image réellement
+# publiée, ce qui n'est le cas que là.
+# ---------------------------------------------------------------------------
+
+.trivy-base:
+  image:
+    name: aquasec/trivy:latest
+    # cf. commentaire trivy-fs : ENTRYPOINT de l'image officielle a desactiver.
+    entrypoint: [""]
+  rules: *validate_rules
+  variables:
+    TRIVY_CACHE_DIR: .trivycache/
+  cache:
+    key: trivy-db
+    paths:
+      - .trivycache/
+
+trivy-image-api:
+  stage: security
+  extends: .trivy-base
+  needs:
+    - job: build-api-image
+      artifacts: true
+  script:
+    - trivy image --input api-image.tar --severity CRITICAL,HIGH --ignore-unfixed
+        --exit-code 0 --format template --template "@/contrib/gitlab.tpl"
+        --output gl-container-scanning-report.json
+    - trivy image --input api-image.tar --severity CRITICAL --ignore-unfixed --exit-code 1
+  artifacts:
+    when: always
+    reports:
+      container_scanning: gl-container-scanning-report.json
+
+sbom-api:
+  stage: security
+  image:
+    name: anchore/syft:debug
+    # Meme cause que trivy : ENTRYPOINT sur le binaire syft, sans shell.
+    entrypoint: [""]
+  rules: *validate_rules
+  needs:
+    - job: build-api-image
+      artifacts: true
+  script:
+    - /syft docker-archive:api-image.tar -o spdx-json=sbom-api.json
+  artifacts:
+    paths:
+      - sbom-api.json
+    expire_in: 1 month
+
+sign-image-api:
+  stage: security
+  image: alpine:3
+  rules: *tag_only
+  needs:
+    - build-api-image
+  # Dépend d'un endpoint OIDC GitLab joignable publiquement par Fulcio (voir
+  # doc/ci.md) : pas garanti sur toute instance. Si ce job échoue à l'émission
+  # du certificat (pas à docker login/registry), ce n'est pas un bug du projet.
+  allow_failure: true
+  id_tokens:
+    SIGSTORE_ID_TOKEN:
+      aud: sigstore
+  before_script:
+    - apk add --no-cache curl
+    - curl -sSL -o /usr/local/bin/cosign
+        https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64
+    - chmod +x /usr/local/bin/cosign
+    - cosign login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD"
+  script:
+    - cosign sign --yes "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"

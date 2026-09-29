@@ -1,0 +1,129 @@
+<div class="auth-shell">
+  @if (resultat()) {
+    <app-success-card
+      title="Entreprise créée"
+      message="Votre espace Comptano est prêt. Un email de confirmation a été envoyé à l'administrateur."
+    >
+      <a routerLink="/" class="btn btn-primary">Accéder au tableau de bord</a>
+    </app-success-card>
+  } @else {
+    <div class="auth-card auth-card--wide">
+      <a routerLink="/" class="retour">&larr; Accueil</a>
+
+      <h1 class="page-title">Création d'entreprise</h1>
+      <p class="page-intro">
+        Crée une entité et son administrateur (chef d'entreprise) en une seule opération. Un mot de passe temporaire
+        et un email de vérification sont envoyés à l'adresse admin indiquée.
+      </p>
+
+      <app-stepper [labels]="etapeLabels" [currentStep]="etapeCourante()" />
+
+      <form [formGroup]="form" (ngSubmit)="etapeSuivante()" class="formulaire">
+        @if (etapeCourante() === 1) {
+          <label>
+            Raison sociale
+            <input type="text" formControlName="raisonSociale" [class.champ-invalide]="form.controls.raisonSociale.invalid && form.controls.raisonSociale.touched" />
+            @if (form.controls.raisonSociale.invalid && form.controls.raisonSociale.touched) {
+              <span class="champ-erreur">Raison sociale requise.</span>
+            }
+          </label>
+
+          <label>
+            Type d'entité
+            <select formControlName="typeEntite">
+              @for (type of typesEntite; track type) {
+                <option [value]="type">{{ type }}</option>
+              }
+            </select>
+          </label>
+
+          <label>
+            Pays
+            <input type="text" formControlName="pays" />
+          </label>
+
+          <label>
+            Numéro d'identification
+            <input type="text" formControlName="numeroIdentification" />
+          </label>
+        }
+
+        @if (etapeCourante() === 2) {
+          <label>
+            Référentiel comptable
+            <select
+              formControlName="referentielComptableCode"
+              [class.champ-invalide]="form.controls.referentielComptableCode.invalid && form.controls.referentielComptableCode.touched"
+            >
+              <option value="" disabled>-- Choisir --</option>
+              @for (referentiel of referentiels(); track referentiel.code) {
+                <option [value]="referentiel.code">{{ referentiel.libelle }}</option>
+              }
+            </select>
+            @if (form.controls.referentielComptableCode.invalid && form.controls.referentielComptableCode.touched) {
+              <span class="champ-erreur">Référentiel requis.</span>
+            }
+          </label>
+
+          <label>
+            Devise
+            <input type="text" formControlName="devise" maxlength="3" placeholder="XOF, XAF, EUR..." />
+          </label>
+        }
+
+        @if (etapeCourante() === 3) {
+          <label>
+            Nom
+            <input type="text" formControlName="adminNom" [class.champ-invalide]="form.controls.adminNom.invalid && form.controls.adminNom.touched" />
+            @if (form.controls.adminNom.invalid && form.controls.adminNom.touched) {
+              <span class="champ-erreur">Nom requis.</span>
+            }
+          </label>
+
+          <label>
+            Post-nom
+            <input type="text" formControlName="adminPostNom" />
+          </label>
+
+          <label>
+            Prénom
+            <input type="text" formControlName="adminPrenom" [class.champ-invalide]="form.controls.adminPrenom.invalid && form.controls.adminPrenom.touched" />
+            @if (form.controls.adminPrenom.invalid && form.controls.adminPrenom.touched) {
+              <span class="champ-erreur">Prénom requis.</span>
+            }
+          </label>
+
+          <label>
+            Email
+            <input type="email" formControlName="adminEmail" [class.champ-invalide]="form.controls.adminEmail.invalid && form.controls.adminEmail.touched" />
+            @if (form.controls.adminEmail.invalid && form.controls.adminEmail.touched) {
+              <span class="champ-erreur">Email valide requis.</span>
+            }
+          </label>
+
+          <label>
+            Téléphone
+            <input type="tel" formControlName="adminTelephone" />
+          </label>
+        }
+
+        @if (erreur()) {
+          <app-alert type="error">{{ erreur() }}</app-alert>
+        }
+
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" [disabled]="etapeCourante() === 1" (click)="etapePrecedente()">
+            Précédent
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="enCours()">
+            @if (etapeCourante() < etapeLabels.length) {
+              Suivant
+            } @else {
+              {{ enCours() ? 'Création en cours...' : "Créer l'entreprise" }}
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</div>

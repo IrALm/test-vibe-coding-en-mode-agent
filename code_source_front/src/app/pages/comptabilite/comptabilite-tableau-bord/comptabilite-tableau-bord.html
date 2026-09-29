@@ -1,0 +1,94 @@
+<div class="page-shell">
+  <a routerLink="/" class="retour">&larr; Accueil</a>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title" style="margin: 0">Comptabilité</h1>
+      <p class="page-intro" style="margin: 3px 0 0">
+        Exercice, journal, écritures, grand livre et balance.
+      </p>
+    </div>
+    <a routerLink="/comptabilite/ecritures/nouveau" class="btn btn-primary">+ Nouvelle écriture</a>
+  </div>
+
+  @if (erreur()) {
+    <app-alert type="error">{{ erreur() }}</app-alert>
+  }
+
+  @if (!enCours() && !exercice()) {
+    <div class="card">
+      <p>Aucun exercice comptable ouvert pour le moment.</p>
+      <a routerLink="/comptabilite/exercices" class="btn btn-primary">Gérer les exercices</a>
+    </div>
+  }
+
+  @if (exercice(); as e) {
+    <div class="tableau-bord-kpi">
+      <div class="carte-exercice-actif">
+        <div class="carte-exercice-label">EXERCICE ACTIF</div>
+        <div class="carte-exercice-periode">
+          {{ e.dateDebut | date: 'dd/MM/yyyy' }} &rarr; {{ e.dateFin | date: 'dd/MM/yyyy' }}
+        </div>
+        <app-status-badge tone="success">Ouvert</app-status-badge>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-label">Brouillons</div>
+        <div class="kpi-valeur tabular-nums">{{ stats()?.brouillon ?? 0 }}</div>
+      </div>
+      <div class="card kpi-card kpi-card--attention">
+        <div class="kpi-label">En attente de validation</div>
+        <div class="kpi-valeur tabular-nums">{{ stats()?.enAttente ?? 0 }}</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-label">Validées</div>
+        <div class="kpi-valeur tabular-nums">{{ stats()?.validees ?? 0 }}</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-label">Résultat provisoire</div>
+        <div class="kpi-valeur-texte tabular-nums">{{ formaterResultat(resultat()?.resultat) }}</div>
+        @if (devise()) {
+          <div style="font-size: 11px; color: var(--text-muted)">{{ devise() }}</div>
+        }
+      </div>
+    </div>
+
+    <h2 class="section-titre">Accès rapide</h2>
+    <div class="comptabilite-cartes">
+      <a routerLink="/comptabilite/exercices" class="card carte-acces">
+        <div class="carte-acces-titre">Exercices comptables</div>
+        <div class="carte-acces-sous">Liste, création, clôture avec report des à-nouveaux.</div>
+        <span class="carte-acces-lien">Gérer les exercices &rarr;</span>
+      </a>
+      <a routerLink="/comptabilite/ecritures" class="card carte-acces">
+        <div class="carte-acces-titre">Journal général</div>
+        <div class="carte-acces-sous">Recherche, filtres par statut, détail.</div>
+        <span class="carte-acces-lien">Voir les écritures &rarr;</span>
+      </a>
+      @if (peutValider()) {
+        <a routerLink="/comptabilite/validation" class="card carte-acces carte-acces--accent">
+          <div style="display: flex; align-items: center; justify-content: space-between">
+            <div class="carte-acces-titre">File de validation</div>
+            <app-status-badge tone="accent">ADMIN</app-status-badge>
+          </div>
+          <div class="carte-acces-sous">{{ stats()?.enAttente ?? 0 }} écriture(s) en attente de validation.</div>
+          <span class="carte-acces-lien">Valider &rarr;</span>
+        </a>
+      }
+      <a routerLink="/comptabilite/grand-livre" class="card carte-acces">
+        <div class="carte-acces-titre">Grand livre</div>
+        <div class="carte-acces-sous">Mouvements par compte, solde progressif.</div>
+        <span class="carte-acces-lien">Consulter &rarr;</span>
+      </a>
+      <a routerLink="/comptabilite/balance" class="card carte-acces">
+        <div class="carte-acces-titre">Balance générale</div>
+        <div class="carte-acces-sous">Totaux débit/crédit par compte, contrôle d'équilibre.</div>
+        <span class="carte-acces-lien">Consulter &rarr;</span>
+      </a>
+      <a routerLink="/comptabilite/ecritures/nouveau" class="card carte-acces">
+        <div class="carte-acces-titre">Nouvelle écriture</div>
+        <div class="carte-acces-sous">Saisie double, bandeau d'équilibre en temps réel.</div>
+        <span class="carte-acces-lien">Saisir &rarr;</span>
+      </a>
+    </div>
+  }
+</div>

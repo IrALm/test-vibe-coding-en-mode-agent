@@ -1,0 +1,186 @@
+@if (currentUserService.utilisateur(); as utilisateur) {
+  <div class="auth-shell">
+    <div class="dashboard">
+      <div class="top-bar">
+        <div class="identite">
+          <div class="avatar avatar-lg">{{ initiales() }}</div>
+          <div>
+            <div class="identite-nom">{{ utilisateur.nom }} {{ utilisateur.prenom }}</div>
+            @if (entite(); as e) {
+              <div class="identite-sub">
+                {{ e.raisonSociale }}
+                <span class="point-separateur"></span>
+                <span class="identite-role">{{ utilisateur.role }}</span>
+              </div>
+            }
+          </div>
+        </div>
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm btn-deconnexion"
+          (click)="seDeconnecter()"
+        >
+          Se déconnecter
+        </button>
+      </div>
+
+      <div class="tabs">
+        <button
+          type="button"
+          class="tab"
+          [class.actif]="onglet() === 'infos'"
+          (click)="choisirOnglet('infos')"
+        >
+          Infos
+        </button>
+        @if (utilisateur.role === 'ADMIN') {
+          <button
+            type="button"
+            class="tab"
+            [class.actif]="onglet() === 'admin'"
+            (click)="choisirOnglet('admin')"
+          >
+            Admin
+          </button>
+        }
+        <a routerLink="/plan-comptable" class="tab">Plan comptable</a>
+        <a routerLink="/tiers" class="tab">Tiers</a>
+        <a routerLink="/comptabilite" class="tab">Comptabilité</a>
+      </div>
+
+      @if (onglet() === 'infos') {
+        <div class="onglet-contenu">
+          <section class="card profil-card">
+            <div class="profil-entete-ligne">
+              <h2>Mon profil</h2>
+              @if (utilisateur.emailVerifie) {
+                <span class="badge-verifie badge-verifie--ok">✓ Email vérifié</span>
+              } @else {
+                <a
+                  class="badge-verifie badge-verifie--attention"
+                  routerLink="/renvoyer-verification"
+                  [queryParams]="{ email: utilisateur.email }"
+                >
+                  Email non vérifié — renvoyer
+                </a>
+              }
+            </div>
+
+            <div class="profil-identite">
+              <div class="avatar avatar-xl">{{ initiales() }}</div>
+              <div>
+                <div class="profil-nom">{{ utilisateur.nom }} {{ utilisateur.prenom }}</div>
+                <div class="profil-meta">
+                  <span class="poste-badge">{{ utilisateur.poste || 'Poste non renseigné' }}</span>
+                  <span class="point-separateur"></span>
+                  <span class="profil-email">{{ utilisateur.email }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mini-cards">
+              <div class="mini-card">
+                <div class="mini-card-label">Nom</div>
+                <div class="mini-card-valeur">{{ utilisateur.nom }}</div>
+              </div>
+              <div class="mini-card">
+                <div class="mini-card-label">Post-nom</div>
+                <div class="mini-card-valeur" [class.mini-card-vide]="!utilisateur.postNom">
+                  {{ utilisateur.postNom || '—' }}
+                </div>
+              </div>
+              <div class="mini-card">
+                <div class="mini-card-label">Prénom</div>
+                <div class="mini-card-valeur">{{ utilisateur.prenom }}</div>
+              </div>
+            </div>
+          </section>
+
+          @if (entite(); as e) {
+            <div>
+              <div class="profil-entete-ligne">
+                <h2 class="section-titre" style="margin: 0">Référentiel comptable</h2>
+                <a routerLink="/plan-comptable" class="btn btn-secondary btn-sm"
+                  >Voir le plan comptable</a
+                >
+              </div>
+              <div class="kpi-grid">
+                <div class="card kpi-card">
+                  <div class="kpi-label">Référentiel actif</div>
+                  <div class="kpi-valeur-texte">{{ e.referentielComptableLibelle }}</div>
+                </div>
+                <div class="card kpi-card">
+                  <div class="kpi-label">Classes</div>
+                  <div class="kpi-valeur tabular-nums">{{ e.nombreClasses }}</div>
+                </div>
+                <div class="card kpi-card">
+                  <div class="kpi-label">Comptes</div>
+                  <div class="kpi-valeur tabular-nums">{{ e.nombreComptes }}</div>
+                </div>
+              </div>
+            </div>
+
+            <section class="card entreprise-card">
+              <h2>Mon entreprise</h2>
+              <div class="mini-cards">
+                <div class="mini-card">
+                  <div class="mini-card-label">Type</div>
+                  <div class="mini-card-valeur">{{ e.typeEntite }}</div>
+                </div>
+                <div class="mini-card">
+                  <div class="mini-card-label">Pays</div>
+                  <div class="mini-card-valeur">{{ e.pays || '—' }}</div>
+                </div>
+                <div class="mini-card">
+                  <div class="mini-card-label">Devise</div>
+                  <div class="mini-card-valeur">{{ e.devise || '—' }}</div>
+                </div>
+              </div>
+              <div class="entreprise-ligne">
+                <span>Raison sociale</span>
+                <span class="entreprise-valeur">{{ e.raisonSociale }}</span>
+              </div>
+              <div class="entreprise-ligne">
+                <span>N° identification</span>
+                <span class="entreprise-valeur entreprise-valeur-id tabular-nums">{{
+                  e.numeroIdentification || '—'
+                }}</span>
+              </div>
+            </section>
+          }
+        </div>
+      }
+
+      @if (onglet() === 'admin') {
+        <div class="onglet-contenu">
+          <div class="admin-callout">Actions réservées aux administrateurs</div>
+          <section class="card admin-action">
+            <div>
+              <div class="admin-action-titre">Gestion des utilisateurs</div>
+              <div class="admin-action-texte">
+                Créer, modifier les rôles et désactiver les comptes.
+              </div>
+            </div>
+            <a routerLink="/admin/utilisateurs" class="btn btn-primary">Gérer les utilisateurs</a>
+          </section>
+        </div>
+      }
+    </div>
+  </div>
+} @else {
+  <div class="auth-shell">
+    <div class="auth-card accueil">
+      <app-logo-mark [size]="64" />
+      <div>
+        <div class="accueil-titre">Comptano</div>
+        <p class="accroche">La comptabilité conforme OHADA, pensée pour votre entreprise.</p>
+      </div>
+      <nav class="actions-accueil">
+        <a routerLink="/creer-entreprise" class="btn btn-primary btn-lg btn-block"
+          >Créer un compte pour votre entreprise</a
+        >
+        <a routerLink="/connexion" class="btn btn-secondary btn-lg btn-block">Se connecter</a>
+      </nav>
+    </div>
+  </div>
+}

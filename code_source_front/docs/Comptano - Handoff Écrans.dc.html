@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="omelette-owns-print" content="true">
+  <style>doc-page:not(:defined){visibility:hidden}
+    body{margin:0}
+    table{border-collapse:collapse;width:100%;font-size:13px;margin:6px 0;}
+    th,td{border:1px solid #ddd;padding:6px 10px;text-align:left;vertical-align:top;}
+    th{background:#f3f1ee;font-weight:600;}
+    code{font-family:'SFMono-Regular',Consolas,monospace;font-size:12.5px;background:#f3f1ee;padding:1px 5px;border-radius:3px;}
+    h2{border-bottom:2px solid #b5652e;padding-bottom:4px;margin-top:30px;}
+    h3{margin-top:20px;color:#8a4f24;}
+    .callout{background:#faf6f0;border-left:3px solid #b5652e;padding:12px 16px;border-radius:0 6px 6px 0;break-inside:avoid;margin:10px 0;}
+    ul{padding-left:20px;}
+    li{margin:3px 0;}
+    .tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:4px;background:#f2ddc9;color:#8a4f24;}
+  </style>
+</helmet>
+<x-import component-from-global-scope="doc-page" from="./doc-page.js" size="letter" orientation="portrait" margin="0.85in" hint-size="100%,100%">
+
+<h1>Comptano — Handoff développement</h1>
+<p style="color:#666;margin-top:-8px;">Modifications à apporter : écran Compte &amp; écran Gestion des utilisateurs — juillet 2026</p>
+
+<div class="callout">Ce document décrit <strong>quoi</strong> changer et <strong>pourquoi</strong>. Les maquettes de référence sont <code>Comptano - Ecran Compte.dc.html</code> (variante <span class="tag">2a</span>) et <code>Comptano - Gestion Utilisateurs.dc.html</code>. Respecter les tokens du design system (anthracite/cuivre, clair/sombre).</p>
+
+<h2>A. Écran Compte</h2>
+<p>Refonte complète de l'ancien écran (profil + entreprise + référentiel empilés, bouton "Se déconnecter" perdu en bas). Nouvelle structure : <strong>barre supérieure + onglets Infos / Admin</strong>.</p>
+
+<h3>A.1 — Barre supérieure</h3>
+<ul>
+<li>À gauche : avatar rond aux <strong>initiales de l'utilisateur connecté</strong> (ex. « JD » pour John Doe), dégradé cuivre. Générer les initiales depuis <code>nom[0] + prénom[0]</code>, en majuscules.</li>
+<li>À côté : nom complet + ligne secondaire « entreprise · RÔLE ».</li>
+<li>À droite : <strong>toggle de thème</strong> (clair/sombre) puis bouton <strong>Se déconnecter</strong> (le bouton n'est plus en bas de page).</li>
+</ul>
+
+<h3>A.2 — Onglets</h3>
+<table>
+<thead><tr><th>Onglet</th><th>Contenu</th><th>Visibilité</th></tr></thead>
+<tbody>
+<tr><td><strong>Infos</strong></td><td>Mon profil, Référentiel comptable, Mon entreprise</td><td>Tous les rôles</td></tr>
+<tr><td><strong>Admin</strong></td><td>Actions réservées admin : « Gestion des utilisateurs »</td><td>ADMIN uniquement — masquer l'onglet pour les autres rôles</td></tr>
+</tbody>
+</table>
+
+<h3>A.3 — Carte « Mon profil »</h3>
+<ul>
+<li>En-tête d'identité : avatar initiales (60px) + nom complet + <strong>poste</strong> (badge, ex. « Comptable principal ») + email.</li>
+<li>Badge <strong>« Email vérifié »</strong> en haut à droite : pastille verte avec ✓ si <code>emailVerified === true</code>. Si non vérifié : badge orange « Email non vérifié » + action de renvoi.</li>
+<li>Nom / Post-nom / Prénom présentés en <strong>mini-cartes</strong> (3 colonnes). Post-nom vide = tiret grisé.</li>
+</ul>
+<div class="callout"><strong>Nouveau champ requis :</strong> <code>poste</code> (fonction de l'utilisateur dans l'entreprise) — à ajouter au modèle utilisateur back + formulaire de création/édition. Afficher un fallback neutre si null.</div>
+
+<h3>A.4 — Référentiel comptable &amp; Entreprise (style KPI)</h3>
+<ul>
+<li>Référentiel : 3 cartes — « Référentiel actif » (texte : SYSCOHADA / Système Normal), « Classes » (nombre, chiffres tabulaires), « Comptes » (nombre).</li>
+<li>Entreprise : mini-KPI pour Type / Pays / Devise ; Raison sociale et N° identification en lignes ; le N° d'identification doit passer à la ligne proprement (<code>word-break</code>) et non déborder.</li>
+</ul>
+
+<h2>B. Écran Gestion des utilisateurs</h2>
+
+<h3>B.1 — Recherche globale <span class="tag">changement clé</span></h3>
+<p>Aujourd'hui la recherche ne porte que sur le nom (+ un champ email séparé). La remplacer par <strong>un seul champ</strong> qui filtre sur <strong>nom, post-nom, prénom ET email</strong> simultanément.</p>
+<ul>
+<li>Concaténer <code>nom + postnom + prenom + email</code>, comparaison insensible à la casse et aux accents.</li>
+<li>Filtrage à la frappe (debounce ~200 ms si la liste vient du serveur).</li>
+<li>Supprimer le second champ « Rechercher par email » et le bouton « Rechercher » (recherche live). Conserver les chips de filtre par rôle et par statut.</li>
+</ul>
+
+<h3>B.2 — Activation / Désactivation <span class="tag">changement clé</span></h3>
+<p>Le bouton « Désactiver » / « Activer » doit déclencher un vrai flux avec confirmation et retour visuel :</p>
+<ol>
+<li>Clic → ouverture d'une <strong>boîte de confirmation</strong> (modale) :
+  <ul>
+  <li>Désactivation : titre « Désactiver l'utilisateur ? », message « [Nom] ne pourra plus se connecter tant que le compte reste désactivé. », bouton rouge « Désactiver ».</li>
+  <li>Activation : titre « Activer l'utilisateur ? », message « [Nom] pourra de nouveau se connecter… », bouton vert « Activer ».</li>
+  <li>Bouton secondaire « Annuler » qui ferme sans rien changer.</li>
+  </ul>
+</li>
+<li>Confirmation → appel API (PATCH statut) → à la réussite :
+  <ul>
+  <li><strong>Toast</strong> en haut de l'écran : vert « [Nom] a été activé. » / neutre foncé « [Nom] a été désactivé. », avec bouton <strong>OK</strong> pour fermer (auto-dismiss ~4 s).</li>
+  <li>La <strong>ligne concernée clignote</strong> brièvement (vert pour activation, rouge pâle pour désactivation).</li>
+  <li>Le <strong>badge de statut</strong> bascule Actif ↔ Inactif et le bouton d'action s'inverse (Désactiver ↔ Activer, couleurs inversées).</li>
+  </ul>
+</li>
+<li>En cas d'échec API : toast d'erreur (rouge) et statut inchangé.</li>
+</ol>
+
+<h3>B.3 — Rappels d'état</h3>
+<table>
+<thead><tr><th>État</th><th>Badge statut</th><th>Bouton action</th></tr></thead>
+<tbody>
+<tr><td>Actif</td><td>vert « Actif »</td><td>outline cuivre « Désactiver »</td></tr>
+<tr><td>Inactif</td><td>gris « Inactif »</td><td>plein vert « Activer »</td></tr>
+</tbody>
+</table>
+<ul>
+<li>Prévoir l'état <strong>« Aucun résultat »</strong> quand recherche/filtre ne renvoie rien.</li>
+<li>Nom affiché en liste : <code>nom + prénom (+ post-nom)</code>.</li>
+</ul>
+
+<h2>C. Checklist d'implémentation</h2>
+<ul>
+<li>[ ] Compte : barre supérieure (avatar initiales + toggle thème + déconnexion à droite)</li>
+<li>[ ] Compte : onglets Infos / Admin, onglet Admin masqué hors ADMIN</li>
+<li>[ ] Compte : ajout champ <code>poste</code> (modèle + form + affichage)</li>
+<li>[ ] Compte : badge email vérifié (vert/orange selon état)</li>
+<li>[ ] Compte : cartes KPI référentiel + mini-KPI entreprise, N° identification qui wrap</li>
+<li>[ ] Utilisateurs : champ de recherche unique (nom+postnom+prénom+email), suppression du champ email et du bouton Rechercher</li>
+<li>[ ] Utilisateurs : modale de confirmation activer/désactiver</li>
+<li>[ ] Utilisateurs : toast succès/erreur + OK + auto-dismiss</li>
+<li>[ ] Utilisateurs : flash de ligne + bascule badge/bouton après confirmation</li>
+<li>[ ] Respect tokens design system (clair/sombre) sur les deux écrans</li>
+</ul>
+
+<div class="callout">En cas de doute sur un espacement, une couleur ou un libellé, les fichiers de maquette interactifs font foi.</div>
+
+</x-import>
+
+</x-dc>
+</body>
+</html>

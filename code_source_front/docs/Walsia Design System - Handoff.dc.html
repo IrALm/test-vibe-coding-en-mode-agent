@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="omelette-owns-print" content="true">
+  <style>doc-page:not(:defined){visibility:hidden}
+    body{margin:0}
+    table{border-collapse:collapse;width:100%;font-size:13px;}
+    th,td{border:1px solid #ddd;padding:6px 10px;text-align:left;vertical-align:top;}
+    th{background:#f3f1ee;font-weight:600;}
+    code{font-family:'SFMono-Regular',Consolas,monospace;font-size:12.5px;background:#f3f1ee;padding:1px 5px;border-radius:3px;}
+    pre{background:#20232a;color:#e8e6e3;padding:14px 16px;border-radius:8px;font-size:12px;line-height:1.6;overflow-x:auto;font-family:'SFMono-Regular',Consolas,monospace;break-inside:avoid;}
+    .swatch{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:middle;margin-right:6px;border:1px solid rgba(0,0,0,0.15);}
+    .callout{background:#faf6f0;border-left:3px solid #b5652e;padding:12px 16px;border-radius:0 6px 6px 0;break-inside:avoid;}
+  </style>
+</helmet>
+<x-import component-from-global-scope="doc-page" from="./doc-page.js" size="letter" orientation="portrait" margin="0.85in" hint-size="100%,100%">
+
+<h1>Comptano — Design System &amp; Handoff</h1>
+<p style="color:#666;margin-top:-8px;">Logiciel comptable OHADA — v1 · juillet 2026</p>
+
+<h2>1. Contexte produit</h2>
+<p>Comptano (développé par Walsia) est un ERP comptable multi-tenant conforme aux référentiels OHADA (SYSCOHADA Normal, SYSCOHADA SMT, SYCEBNL), destiné aux PME, ONG, associations et écoles. Le produit est en tout début de vie : seuls l'authentification, l'onboarding d'entreprise et l'administration des utilisateurs sont en place ; le moteur comptable (Phase 1) reste à construire. Ce document livre le système de design (tokens + composants, clair/sombre) qui doit porter le produit sur plusieurs années d'itérations.</p>
+<p><strong>Stack front :</strong> Angular (composants standalone, signals). Aucune librairie UI n'est imposée — tous les tokens et composants ci-dessous sont sur-mesure et à implémenter en CSS custom properties + composants Angular.</p>
+
+<h2>2. Principe d'implémentation</h2>
+<p>Tous les tokens sont des <strong>variables CSS</strong> définies sur <code>:root</code> pour le clair, et re-déclarées sous un sélecteur <code>[data-theme="dark"]</code> pour le sombre. Basculer de thème = poser <code>data-theme="dark"</code> sur <code>&lt;html&gt;</code> ou <code>&lt;body&gt;</code> (piloté par l'utilisateur, pas seulement <code>prefers-color-scheme</code>). Chaque composant ne référence que les tokens sémantiques (<code>var(--bg)</code>, <code>var(--accent)</code>…), jamais une valeur brute — c'est ce qui permet au thème de changer sans toucher aux composants.</p>
+
+<div class="callout"><strong>Couleur du logo :</strong> le monogramme "W" utilise <code>var(--copper-200)</code> en mode clair (teinte cuivre d'origine) et devient noir (<code>#000000</code>) en mode sombre — seule exception à la règle des tokens sémantiques, car c'est un élément de marque fixe.</div>
+
+<h2>3. Tokens — Couleurs</h2>
+<p>Palette dérivée du logo (anthracite + cuivre). Toutes les couleurs sont en <code>oklch()</code> pour un contrôle fin de la luminosité et un contraste prévisible.</p>
+
+<h3>Mode clair (défaut)</h3>
+<table>
+<thead><tr><th>Token</th><th>Valeur</th><th>Usage</th></tr></thead>
+<tbody>
+<tr><td><code>--bg</code></td><td><span class="swatch" style="background:#fafaf9"></span>oklch(0.98 0.003 95)</td><td>Fond de page</td></tr>
+<tr><td><code>--surface</code></td><td><span class="swatch" style="background:#ffffff"></span>oklch(1 0 0)</td><td>Cards, panneaux</td></tr>
+<tr><td><code>--surface-2</code></td><td><span class="swatch" style="background:#f1f0ee"></span>oklch(0.95 0.004 95)</td><td>Fond de section, en-têtes de table</td></tr>
+<tr><td><code>--border</code> / <code>--border-strong</code></td><td>oklch(0.90 / 0.82 …)</td><td>Séparateurs / bordures de champs</td></tr>
+<tr><td><code>--text</code></td><td><span class="swatch" style="background:#1c1e22"></span>oklch(0.155 0.006 250)</td><td>Texte principal</td></tr>
+<tr><td><code>--text-muted</code></td><td>oklch(0.40 0.008 250)</td><td>Texte secondaire, libellés</td></tr>
+<tr><td><code>--accent</code></td><td><span class="swatch" style="background:#b5652e"></span>oklch(0.58 0.13 45)</td><td>Boutons primaires, liens, focus</td></tr>
+<tr><td><code>--text-on-accent</code></td><td>oklch(1 0 0) — blanc</td><td>Texte sur fond accent</td></tr>
+<tr><td><code>--success</code> / <code>--success-soft</code></td><td>hue 150</td><td>Validation, états positifs</td></tr>
+<tr><td><code>--error</code> / <code>--error-soft</code></td><td>hue 25</td><td>Erreurs, rejets</td></tr>
+<tr><td><code>--warning</code> / <code>--warning-soft</code></td><td>hue 85</td><td>Alertes, en attente</td></tr>
+<tr><td><code>--debit</code></td><td>oklch(0.155 0.006 250) — même que texte</td><td>Montants au débit (tableaux comptables)</td></tr>
+<tr><td><code>--credit</code></td><td>oklch(0.48 0.12 42) — cuivre foncé</td><td>Montants au crédit</td></tr>
+</tbody>
+</table>
+
+<h3>Mode sombre — variante retenue : Anthracite froid</h3>
+<p>Neutres gris-anthracite (hue 250, faible chroma). <strong>Règle d'inversion :</strong> les éléments à teinte accent (boutons, badges pleins) inversent fond/texte par rapport au clair — en clair le bouton primaire est cuivre-plein/texte-blanc, en sombre il devient clair-crème-plein/texte-cuivre-foncé.</p>
+<table>
+<thead><tr><th>Token</th><th>Valeur</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td><code>--bg</code></td><td><span class="swatch" style="background:#26282b"></span>oklch(0.17 0.006 250)</td><td>Fond de page</td></tr>
+<tr><td><code>--surface</code></td><td>oklch(0.23 0.007 250)</td><td>Cards, panneaux</td></tr>
+<tr><td><code>--surface-2</code></td><td>oklch(0.30 0.008 250)</td><td>Fond de section</td></tr>
+<tr><td><code>--text</code></td><td>oklch(0.97 0.003 95)</td><td>Texte principal</td></tr>
+<tr><td><code>--text-muted</code></td><td>oklch(0.72 0.008 95)</td><td>Texte secondaire</td></tr>
+<tr><td><code>--accent</code></td><td><span class="swatch" style="background:#e8c9a8"></span>oklch(0.88 0.045 55) — clair, inversé</td><td>Boutons primaires</td></tr>
+<tr><td><code>--text-on-accent</code></td><td>oklch(0.30 0.09 42) — cuivre foncé</td><td>Texte sur bouton accent</td></tr>
+<tr><td><code>--accent-soft</code> / <code>--accent-on-soft</code></td><td>oklch(0.42 0.10 45) / oklch(0.90 0.05 55)</td><td>Badges accent (inversés aussi)</td></tr>
+<tr><td><code>--credit</code></td><td>oklch(0.88 0.045 55) — clair</td><td>Montants au crédit</td></tr>
+</tbody>
+</table>
+
+<p><strong>Contraste (WCAG AA vérifié) :</strong> toutes les paires texte/fond du système sont ≥ 4.5:1 (la plupart entre 5:1 et 19:1). Ratios notables : texte principal/fond 18.45:1 (clair) et 13.9:1 (sombre) ; bouton primaire 4.51:1 (clair) et 9.72:1 (sombre) ; badges de statut 5.3–6.8:1 dans les deux thèmes.</p>
+
+<pre>:root {
+  --bg: oklch(0.98 0.003 95);
+  --surface: oklch(1 0 0);
+  --text: oklch(0.155 0.006 250);
+  --accent: oklch(0.58 0.13 45);
+  --text-on-accent: oklch(1 0 0);
+  /* … voir tableaux ci-dessus pour la liste complète */
+}
+[data-theme="dark"] {
+  --bg: oklch(0.17 0.006 250);
+  --surface: oklch(0.23 0.007 250);
+  --text: oklch(0.97 0.003 95);
+  --accent: oklch(0.88 0.045 55);
+  --text-on-accent: oklch(0.30 0.09 42);
+}</pre>
+
+<h2>4. Tokens — Typographie, espacement, formes</h2>
+<table>
+<thead><tr><th>Catégorie</th><th>Valeurs</th></tr></thead>
+<tbody>
+<tr><td>Police</td><td>Sans-serif système (Helvetica/Arial) — aucune police custom requise pour le MVP</td></tr>
+<tr><td>Chiffres tabulaires</td><td><code>font-variant-numeric: tabular-nums</code> obligatoire sur tout montant (tableaux comptables, KPI)</td></tr>
+<tr><td>Échelle de taille</td><td>12 · 13 · 14 · 16 · 18 · 22 · 28 · 36px</td></tr>
+<tr><td>Densité de ligne</td><td>Confortable 44px (formulaires, listes) · Dense 34px (saisie comptable / grilles d'écritures)</td></tr>
+<tr><td>Rayons</td><td>4px (sm) · 6px (md, défaut boutons/champs) · 10px (lg, cards) · 999px (badges, chips)</td></tr>
+<tr><td>Ombres</td><td>sm : 0 1px 2px ; md : 0 2px 8px ; lg : 0 8px 24px (modales) — opacité noire, jamais colorée</td></tr>
+</tbody>
+</table>
+
+<h2>5. Composants</h2>
+<p>Ordre de priorité de construction pour le front, aligné sur l'usage réel :</p>
+<table>
+<thead><tr><th>Composant</th><th>États / variantes</th></tr></thead>
+<tbody>
+<tr><td><strong>Bouton</strong></td><td>primary (accent plein), secondary (outline), ghost (texte), danger (rouge) · sm/md/lg · disabled (opacité 45%)</td></tr>
+<tr><td><strong>Champ de formulaire</strong></td><td>text, email, select · label au-dessus · état erreur (bordure + message rouge sous le champ)</td></tr>
+<tr><td><strong>Badge de statut</strong></td><td>Brouillon (neutre) · En attente (warning) · Validée (success) · Payée (accent) · Rejetée (error) — pill, 12px, fond "soft" + texte "on-soft"</td></tr>
+<tr><td><strong>Badge de rôle</strong></td><td>ADMIN, COMPTABLE, RH, ACHATS, CAISSIER, LECTURE_SEULE — une teinte par rôle, coins légèrement arrondis (6px, pas pill) pour les distinguer visuellement des badges de statut</td></tr>
+<tr><td><strong>Alerte</strong></td><td>error / warning / success — bandeau plein-largeur, fond "soft", pas d'icône requise pour le MVP</td></tr>
+<tr><td><strong>Table dense</strong></td><td>en-têtes triables (clic + flèche ↑/↓), lignes 34px, montants tabulaires alignés à droite, debit ≠ credit par couleur, pagination en pied de table</td></tr>
+<tr><td><strong>Recherche &amp; filtre</strong></td><td>barre de recherche pleine largeur + chips de filtre (rôle, statut…) au-dessus de la table, état "aucun résultat" dédié</td></tr>
+<tr><td><strong>Card KPI</strong></td><td>libellé (12px muted) + valeur (26px, tabulaire) + variation colorée (success/error)</td></tr>
+<tr><td><strong>Navigation</strong></td><td>sidebar conditionnée par rôle (items filtrés selon permissions) + item actif marqué par bordure droite 3px accent</td></tr>
+<tr><td><strong>Modale</strong></td><td>overlay 45% noir, card centrée, ombre lg, fermeture par bouton secondaire</td></tr>
+<tr><td><strong>Stepper (formulaire par étapes)</strong></td><td>cercles numérotés reliés par une ligne ; étape complétée = ✓ + ligne accent ; à réutiliser pour <em>toute</em> création multi-champs (entreprise, utilisateur, futur : exercice comptable, facture…)</td></tr>
+</tbody>
+</table>
+
+<h2>6. Écrans couverts (v1)</h2>
+<ul>
+<li><strong>Accueil non connecté</strong> — logo adaptatif, accroche, 2 actions (créer un compte / se connecter)</li>
+<li><strong>Création d'entreprise (onboarding)</strong> — stepper 3 étapes : Entreprise → Référentiel → Administrateur</li>
+<li><strong>Création d'utilisateur</strong> — modale, stepper 3 étapes : Informations (Nom / Post-nom / Prénom / email) → Rôle → Confirmation</li>
+<li><strong>Liste des utilisateurs (ADMIN)</strong> — recherche + chips de filtre par rôle + table triable + pagination</li>
+<li><strong>Tableau de bord</strong> — cards KPI + navigation conditionnée par rôle</li>
+</ul>
+<p style="color:#666;font-size:13px;">Hors scope de ce document : écrans détaillés des phases 2 à 7 (facturation, achats/immobilisations, RH, gestion documentaire, états financiers, reporting) — le système de tokens/composants ci-dessus est conçu pour les anticiper (tables denses, statuts multi-étapes, chiffres tabulaires, upload/preview générique à construire au moment venu).</p>
+
+<h2>7. Ce qui reste à faire côté front</h2>
+<ul>
+<li>Traduire les tokens ci-dessus en variables CSS Angular globales (un seul fichier <code>tokens.css</code> chargé dans <code>angular.json</code>)</li>
+<li>Construire les composants standalone correspondants (Button, Badge, Alert, Field, Table, Stepper, Modal…) en respectant strictement les tokens sémantiques, jamais de couleur en dur</li>
+<li>Implémenter le toggle clair/sombre (attribut <code>data-theme</code> + persistance utilisateur, ex. localStorage)</li>
+<li>Gérer l'expiration de session (heartbeat Keycloak) avec redirection automatique vers l'écran d'accueil</li>
+</ul>
+
+<div class="callout">Ce document + le fichier de design interactif (<code>Walsia Design System.dc.html</code>, à renommer côté projet en "Comptano Design System") constituent la référence unique. En cas de doute sur une valeur, la version interactive fait foi — ce PDF en est un instantané figé.</div>
+
+</x-import>
+
+</x-dc>
+</body>
+</html>

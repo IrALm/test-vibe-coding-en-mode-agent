@@ -1,0 +1,189 @@
+services:
+
+  postgres-keycloak:
+    image: postgres:16.4-alpine
+    container_name: postgres-keycloak
+    restart: unless-stopped
+
+    labels:
+      # Empeche Spring Boot Docker Compose d'auto-detecter cette DB comme
+      # datasource de l'appli : elle appartient a Keycloak, pas au backend.
+      - "org.springframework.boot.ignore=true"
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_KEYCLOAK_DB}
+      POSTGRES_USER: ${POSTGRES_KEYCLOAK_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_KEYCLOAK_PASSWORD}
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_KEYCLOAK_USER} -d ${POSTGRES_KEYCLOAK_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    volumes:
+      - keycloak_postgres_data:/var/lib/postgresql/data
+
+    networks:
+      - keycloak-network
+
+
+  postgres-metier:
+    image: postgres:16.4-alpine
+    container_name: postgres-metier
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_METIER_DB}
+      POSTGRES_USER: ${POSTGRES_METIER_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_METIER_PASSWORD}
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_METIER_USER} -d ${POSTGRES_METIER_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    ports:
+      - "127.0.0.1:5433:5432"
+
+    volumes:
+      - metier_postgres_data:/var/lib/postgresql/data
+
+    networks:
+      - metier-network
+
+
+  postgres-test:
+    image: postgres:16.4-alpine
+    container_name: postgres-test
+    restart: unless-stopped
+
+    labels:
+      # Meme raison que postgres-keycloak : evite que Spring Boot Docker
+      # Compose ne l'auto-detecte comme datasource du profil dev.
+      - "org.springframework.boot.ignore=true"
+
+    environment:
+      # Identifiants fixes, alignes sur src/test/resources/application-test.yaml
+      # et sur le service Postgres ephemere de la CI (.gitlab-ci.yml, job test) :
+      # jamais utilises pour de vraies donnees, pas de secret a proteger ici.
+      POSTGRES_DB: erp_metier_test
+      POSTGRES_USER: erp_user
+      POSTGRES_PASSWORD: erp_password
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U erp_user -d erp_metier_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    # tmpfs, pas de volume nomme : la base doit toujours redemarrer vide
+    # (chaque run de test repart de zero via Flyway) plutot que d'accumuler
+    # un etat d'un run a l'autre.
+    tmpfs:
+      - /var/lib/postgresql/data
+
+    ports:
+      # Port distinct de 5432 (peut etre pris par un Postgres natif hors
+      # Docker sur la machine du developpeur) et de 5433 (postgres-metier,
+      # base de dev). Volontairement expose sur l'hote : consomme directement
+      # par mvn test / l'IDE, hors du reseau Docker.
+      - "127.0.0.1:5435:5432"
+
+    networks:
+      - metier-network
+
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.6.4
+    container_name: keycloak
+    restart: unless-stopped
+
+    depends_on:
+      postgres-keycloak:
+        condition: service_healthy
+
+    ports:
+      - "127.0.0.1:8081:8080"
+
+    environment:
+
+      # PostgreSQL
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/${POSTGRES_KEYCLOAK_DB}
+      KC_DB_USERNAME: ${POSTGRES_KEYCLOAK_USER}
+      KC_DB_PASSWORD: ${POSTGRES_KEYCLOAK_PASSWORD}
+
+      # Admin Keycloak
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+
+      # Secret du client de service applicatif (KeycloakAdminClient), substitue
+      # dans keycloak/realm-export.json au moment de l'import du realm
+      KC_APP_CLIENT_SECRET: ${KC_APP_CLIENT_SECRET}
+
+      # Secret du client BFF (login/logout backend-mediated), substitue de la
+      # meme maniere dans realm-export.json (client api-compta-bff)
+      KC_BFF_CLIENT_SECRET: ${KC_BFF_CLIENT_SECRET}
+
+      # Dev only: autorise l'acces via localhost sans hostname strict/TLS
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+
+      # Dev only: recharge le theme a chaque requete (pas de cache), pour
+      # iterer sur keycloak/themes/ sans redemarrer le conteneur.
+      KC_SPI_THEME_STATIC_MAX_AGE: "-1"
+      KC_SPI_THEME_CACHE_THEMES: "false"
+      KC_SPI_THEME_CACHE_TEMPLATES: "false"
+
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+      - ./keycloak/themes/erp-comptable:/opt/keycloak/themes/erp-comptable:ro
+
+    command:
+      - start-dev
+      - --import-realm
+
+    networks:
+      - keycloak-network
+
+
+  pgadmin:
+    image: dpage/pgadmin4:8.12
+    container_name: pgadmin
+
+    restart: unless-stopped
+
+    depends_on:
+      postgres-keycloak:
+        condition: service_healthy
+      postgres-metier:
+        condition: service_healthy
+
+    ports:
+      - "127.0.0.1:5050:80"
+
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+    networks:
+      - keycloak-network
+      - metier-network
+
+
+volumes:
+
+  keycloak_postgres_data:
+  metier_postgres_data:
+  pgadmin_data:
+
+
+networks:
+
+  keycloak-network:
+  metier-network:

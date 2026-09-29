@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: api-compta
+
+  profiles:
+    default: dev
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true

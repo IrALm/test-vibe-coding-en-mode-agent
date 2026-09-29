@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body{margin:0;background:#faf9f7;font-family:Helvetica,Arial,sans-serif;}
+    *{box-sizing:border-box;}
+    @keyframes toastIn{from{opacity:0;transform:translateY(-8px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+    @keyframes overlayIn{from{opacity:0;}to{opacity:1;}}
+    @keyframes rowFlash{0%{background:#fff;}30%{background:var(--flash);}100%{background:#fff;}}
+  </style>
+</helmet>
+<div style="max-width:1120px;margin:0 auto;padding:24px 28px 60px;">
+  <div style="font-size:13px;color:#666;margin-bottom:18px;cursor:pointer;">← Accueil</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+    <h1 style="font-size:26px;font-weight:800;color:#1c1e22;margin:0;">Utilisateurs</h1>
+    <button style="height:44px;padding:0 20px;border-radius:8px;border:none;background:#a1521f;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">+ Ajouter un utilisateur</button>
+  </div>
+
+  <div style="background:#fff;border:1px solid #e5e2dd;border-radius:14px;overflow:hidden;">
+    <!-- search -->
+    <div style="display:flex;gap:12px;padding:18px 20px;border-bottom:1px solid #efece7;">
+      <input type="text" value="{{ query }}" onInput="{{ onSearch }}" placeholder="Rechercher par nom, post-nom, prénom ou email…" style="flex:1;height:44px;padding:0 14px;border-radius:8px;border:1px solid #d6d2cc;font-size:14px;color:#1c1e22;"></input>
+    </div>
+    <!-- filters -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding:14px 20px;border-bottom:1px solid #efece7;align-items:center;">
+      <sc-for list="{{ roleChips }}" as="c" hint-placeholder-count="7">
+        <button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button>
+      </sc-for>
+      <div style="width:1px;height:22px;background:#e5e2dd;margin:0 4px;"></div>
+      <sc-for list="{{ statusChips }}" as="c" hint-placeholder-count="3">
+        <button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button>
+      </sc-for>
+    </div>
+    <!-- table header -->
+    <div style="display:grid;grid-template-columns:1.4fr 1.8fr 130px 100px 150px 120px;background:#f3f1ee;padding:0 20px;">
+      <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Nom</div>
+      <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Email</div>
+      <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Rôle</div>
+      <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Statut</div>
+      <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Ajouté le</div>
+      <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;"></div>
+    </div>
+    <!-- rows -->
+    <sc-for list="{{ visibleUsers }}" as="u" hint-placeholder-count="2">
+      <div style="{{ u.rowStyle }}">
+        <div style="min-height:56px;display:flex;flex-direction:column;justify-content:center;font-size:14px;font-weight:600;color:#1c1e22;">{{ u.fullName }}</div>
+        <div style="min-height:56px;display:flex;align-items:center;font-size:14px;color:#555;">{{ u.email }}</div>
+        <div style="min-height:56px;display:flex;align-items:center;"><span style="{{ u.roleBadge }}">{{ u.role }}</span></div>
+        <div style="min-height:56px;display:flex;align-items:center;"><span style="{{ u.statusBadge }}">{{ u.statusLabel }}</span></div>
+        <div style="min-height:56px;display:flex;align-items:center;font-size:13px;color:#666;">{{ u.addedAt }}</div>
+        <div style="min-height:56px;display:flex;align-items:center;">
+          <button onClick="{{ u.onToggle }}" style="{{ u.actionStyle }}">{{ u.actionLabel }}</button>
+        </div>
+      </div>
+    </sc-for>
+    <sc-if value="{{ noResults }}">
+      <div style="padding:36px 20px;text-align:center;font-size:14px;color:#888;">Aucun utilisateur ne correspond à cette recherche.</div>
+    </sc-if>
+    <!-- footer -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;">
+      <span style="font-size:13px;color:#666;">Page 1 / 1 ({{ countLabel }})</span>
+      <div style="display:flex;gap:8px;">
+        <button style="width:34px;height:34px;border-radius:8px;border:1px solid #d6d2cc;background:#fff;color:#999;cursor:pointer;">‹</button>
+        <button style="width:34px;height:34px;border-radius:8px;border:1px solid #d6d2cc;background:#fff;color:#999;cursor:pointer;">›</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- confirmation dialog -->
+<sc-if value="{{ confirmOpen }}">
+  <div style="position:fixed;inset:0;background:rgba(0,0,0,0.42);display:flex;align-items:center;justify-content:center;z-index:60;animation:overlayIn 0.15s ease;">
+    <div style="background:#fff;border-radius:14px;padding:26px 28px;width:420px;box-shadow:0 12px 40px rgba(0,0,0,0.22);">
+      <div style="font-size:17px;font-weight:800;color:#1c1e22;margin-bottom:10px;">{{ confirmTitle }}</div>
+      <div style="font-size:14px;color:#555;line-height:1.55;margin-bottom:22px;">{{ confirmMessage }}</div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;">
+        <button onClick="{{ cancelConfirm }}" style="height:40px;padding:0 18px;border-radius:8px;border:1px solid #d6d2cc;background:#fff;color:#1c1e22;font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>
+        <button onClick="{{ applyConfirm }}" style="{{ confirmBtnStyle }}">{{ confirmBtnLabel }}</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<!-- toast -->
+<sc-if value="{{ toastOpen }}">
+  <div style="position:fixed;top:22px;left:50%;transform:translateX(-50%);z-index:70;animation:toastIn 0.22s cubic-bezier(0.16,1,0.3,1);">
+    <div style="{{ toastStyle }}">
+      <span style="{{ toastDot }}">{{ toastIcon }}</span>
+      <span style="font-size:14px;font-weight:600;">{{ toastMessage }}</span>
+      <button onClick="{{ dismissToast }}" style="margin-left:6px;height:30px;padding:0 14px;border-radius:7px;border:none;background:rgba(255,255,255,0.22);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">OK</button>
+    </div>
+  </div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    query: '',
+    roleFilter: 'Tous',
+    statusFilter: 'Tous statuts',
+    users: [
+      { id: 1, nom: 'Does', postnom: 'Jeanne', prenom: 'Jane', email: 'Jana@gmail.com', role: 'COMPTABLE', active: true, addedAt: '7/17/26, 4:03 AM' },
+      { id: 2, nom: 'Doe', postnom: '', prenom: 'John', email: 'moiseaganze76@gmail.com', role: 'ADMIN', active: true, addedAt: '7/17/26, 3:58 AM' },
+    ],
+    confirm: null,      // { id, toActive }
+    toast: null,        // { message, active }
+    flashId: null,
+  };
+
+  roleColors(role) {
+    const m = {
+      ADMIN: ['#f2ddc9', '#8a4f24', '#e2b98f'],
+      COMPTABLE: ['#e6f4ea', '#1f7a44', '#b7e0c4'],
+      RH: ['#efe4f6', '#7a3fa0', '#dcc4ec'],
+      ACHATS: ['#fbf1d8', '#8a6d1f', '#ecdca8'],
+      CAISSIER: ['#e2eef8', '#2a5f8f', '#c0d8ee'],
+      LECTURE_SEULE: ['#eeecea', '#555', '#dcd8d2'],
+    };
+    return m[role] || m.LECTURE_SEULE;
+  }
+
+  chip(active) {
+    return {
+      padding: '7px 16px', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+      border: active ? '1px solid #d09a5f' : '1px solid #d6d2cc',
+      background: active ? '#f2ddc9' : '#fff',
+      color: active ? '#8a4f24' : '#444',
+    };
+  }
+
+  askToggle(id, toActive) { this.setState({ confirm: { id, toActive } }); }
+
+  applyConfirm = () => {
+    const { id, toActive } = this.state.confirm;
+    const users = this.state.users.map(u => u.id === id ? { ...u, active: toActive } : u);
+    const target = users.find(u => u.id === id);
+    const name = `${target.nom} ${target.prenom}`.trim();
+    this.setState({
+      users, confirm: null, flashId: id,
+      toast: { message: toActive ? `${name} a été activé.` : `${name} a été désactivé.`, active: toActive },
+    });
+    clearTimeout(this._flashT); clearTimeout(this._toastT);
+    this._flashT = setTimeout(() => this.setState({ flashId: null }), 900);
+    this._toastT = setTimeout(() => this.setState({ toast: null }), 4000);
+  };
+
+  renderVals() {
+    const q = this.state.query.trim().toLowerCase();
+    const rf = this.state.roleFilter, sf = this.state.statusFilter;
+
+    const filtered = this.state.users.filter(u => {
+      const hay = `${u.nom} ${u.postnom} ${u.prenom} ${u.email}`.toLowerCase();
+      const okQ = q === '' || hay.includes(q);
+      const okR = rf === 'Tous' || u.role === rf;
+      const okS = sf === 'Tous statuts' || (sf === 'Actif' ? u.active : !u.active);
+      return okQ && okR && okS;
+    });
+
+    const visibleUsers = filtered.map(u => {
+      const [bg, fg, bd] = this.roleColors(u.role);
+      const flashing = this.state.flashId === u.id;
+      return {
+        ...u,
+        fullName: `${u.nom} ${u.prenom}`.trim() + (u.postnom ? ` ${u.postnom}` : ''),
+        statusLabel: u.active ? 'Actif' : 'Inactif',
+        rowStyle: {
+          display: 'grid', gridTemplateColumns: '1.4fr 1.8fr 130px 100px 150px 120px',
+          padding: '0 20px', borderBottom: '1px solid #f0eeea',
+          animation: flashing ? 'rowFlash 0.9s ease' : 'none',
+          '--flash': u.active ? '#e9f6ee' : '#fbecec',
+        },
+        roleBadge: `display:inline-block;padding:3px 12px;border-radius:999px;font-size:12px;font-weight:700;background:${bg};color:${fg};border:1px solid ${bd};`,
+        statusBadge: u.active
+          ? 'display:inline-block;padding:3px 12px;border-radius:999px;font-size:12px;font-weight:700;background:#e6f4ea;color:#1f7a44;border:1px solid #b7e0c4;'
+          : 'display:inline-block;padding:3px 12px;border-radius:999px;font-size:12px;font-weight:700;background:#eeecea;color:#8a8580;border:1px solid #dcd8d2;',
+        actionLabel: u.active ? 'Désactiver' : 'Activer',
+        actionStyle: u.active
+          ? { height: 34, padding: '0 14px', borderRadius: 8, border: '1px solid #e6c9c2', background: '#fff', color: '#b5652e', fontSize: 13, fontWeight: 700, cursor: 'pointer' }
+          : { height: 34, padding: '0 14px', borderRadius: 8, border: 'none', background: '#1f9d55', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' },
+        onToggle: () => this.askToggle(u.id, !u.active),
+      };
+    });
+
+    const roleChips = ['Tous', 'ADMIN', 'COMPTABLE', 'RH', 'ACHATS', 'CAISSIER', 'LECTURE_SEULE'].map(key => ({
+      label: key === 'Tous' ? 'Tous' : key, style: this.chip(rf === key),
+      onClick: () => this.setState({ roleFilter: key }),
+    }));
+    const statusChips = ['Tous statuts', 'Actif', 'Inactif'].map(key => ({
+      label: key, style: this.chip(sf === key),
+      onClick: () => this.setState({ statusFilter: key }),
+    }));
+
+    const c = this.state.confirm;
+    let confirmVals = { confirmOpen: false };
+    if (c) {
+      const u = this.state.users.find(x => x.id === c.id);
+      const name = `${u.nom} ${u.prenom}`.trim();
+      confirmVals = {
+        confirmOpen: true,
+        confirmTitle: c.toActive ? "Activer l'utilisateur ?" : "Désactiver l'utilisateur ?",
+        confirmMessage: c.toActive
+          ? `${name} pourra de nouveau se connecter et accéder à Comptano.`
+          : `${name} ne pourra plus se connecter tant que le compte reste désactivé.`,
+        confirmBtnLabel: c.toActive ? 'Activer' : 'Désactiver',
+        confirmBtnStyle: c.toActive
+          ? { height: 40, padding: '0 18px', borderRadius: 8, border: 'none', background: '#1f9d55', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }
+          : { height: 40, padding: '0 18px', borderRadius: 8, border: 'none', background: '#c0392b', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' },
+      };
+    }
+
+    const t = this.state.toast;
+    let toastVals = { toastOpen: false };
+    if (t) {
+      toastVals = {
+        toastOpen: true,
+        toastMessage: t.message,
+        toastIcon: t.active ? '✓' : '⏻',
+        toastStyle: `display:flex;align-items:center;gap:10px;padding:12px 14px 12px 16px;border-radius:12px;color:#fff;box-shadow:0 8px 26px rgba(0,0,0,0.25);background:${t.active ? '#1f9d55' : '#5a5550'};`,
+        toastDot: `width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.22);display:inline-flex;align-items:center;justify-content:center;font-size:12px;`,
+      };
+    }
+
+    return {
+      query: this.state.query,
+      onSearch: (e) => this.setState({ query: e.target.value }),
+      roleChips, statusChips,
+      visibleUsers,
+      noResults: visibleUsers.length === 0,
+      countLabel: `${filtered.length} utilisateur(s)`,
+      cancelConfirm: () => this.setState({ confirm: null }),
+      applyConfirm: this.applyConfirm,
+      dismissToast: () => this.setState({ toast: null }),
+      ...confirmVals,
+      ...toastVals,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

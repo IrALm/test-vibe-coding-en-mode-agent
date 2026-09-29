@@ -1,0 +1,99 @@
+// Carte "référentiel actif" — fond anthracite dégradé (cf. handoff Plan comptable 2a)
+.kpi-card--referentiel {
+  background: linear-gradient(135deg, var(--n-800), var(--n-700));
+  border-color: transparent;
+
+  .kpi-label,
+  .kpi-valeur-texte {
+    color: var(--bg);
+  }
+}
+
+.plan-comptable-corps {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.classe-pastille--grande {
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+}
+
+.classe-souligne {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+// Panneau des comptes
+.comptes-panneau {
+  flex: 1;
+  min-width: 0;
+}
+
+.panneau-entete {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panneau-entete-texte {
+  min-width: 0;
+}
+
+.panneau-titre {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.panneau-description {
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 480px;
+}
+
+// Colonnes du tableau des comptes — 88px 1fr 90px 72px 86px
+.comptes-table {
+  table-layout: fixed;
+
+  col.col-numero,
+  th:nth-child(1),
+  td:nth-child(1) {
+    width: 88px;
+  }
+
+  th:nth-child(3),
+  td:nth-child(3) {
+    width: 90px;
+  }
+
+  th:nth-child(4),
+  td:nth-child(4) {
+    width: 72px;
+  }
+
+  th:nth-child(5),
+  td:nth-child(5) {
+    width: 86px;
+  }
+}
+
+.col-numero {
+  font-weight: 700;
+}
+
+.lettrable-oui {
+  color: var(--success-on-soft);
+  font-weight: 700;
+}
+
+.lettrable-non {
+  color: var(--text-faint);
+}

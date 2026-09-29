@@ -1,0 +1,157 @@
+<div class="page-shell">
+  <div class="fil-ariane"><a routerLink="/comptabilite">Comptabilité</a> / Exercices</div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title" style="margin: 0">Exercices comptables</h1>
+      <p class="page-intro" style="margin: 3px 0 0">
+        Un seul exercice « Ouvert » à la fois. La clôture reporte les à-nouveaux.
+      </p>
+    </div>
+    @if (peutGererExercices()) {
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="unExerciceOuvertExiste()"
+        (click)="ouvrirModaleCreation()"
+      >
+        + Nouvel exercice
+      </button>
+    }
+  </div>
+  @if (peutGererExercices() && unExerciceOuvertExiste()) {
+    <app-alert type="warning">Un exercice est déjà ouvert — clôturez-le avant d'en créer un nouveau.</app-alert>
+  }
+
+  @if (erreur()) {
+    <app-alert type="error">{{ erreur() }}</app-alert>
+  }
+
+  <div class="table-panel">
+    <table class="table-dense">
+      <thead>
+        <tr>
+          <th>Période</th>
+          <th>Statut</th>
+          <th>Résultat</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of exercices(); track e.id) {
+          <tr>
+            <td>{{ e.dateDebut | date: 'dd/MM/yyyy' }} &rarr; {{ e.dateFin | date: 'dd/MM/yyyy' }}</td>
+            <td>
+              <app-status-badge [tone]="e.statut === 'OUVERT' ? 'success' : 'neutral'">
+                {{ e.statut === 'OUVERT' ? 'Ouvert' : 'Clos' }}
+              </app-status-badge>
+            </td>
+            <td class="tabular-nums">{{ formaterResultat(resultatsParExercice()[e.id]) }}</td>
+            <td>
+              @if (e.statut === 'OUVERT') {
+                @if (peutGererExercices()) {
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="demanderCloture(e)">
+                    Clôturer
+                  </button>
+                }
+              } @else {
+                <a
+                  [routerLink]="['/comptabilite/grand-livre']"
+                  [queryParams]="{ exerciceId: e.id }"
+                  style="font-size: 13px; font-weight: 700"
+                >
+                  Consulter &rarr;
+                </a>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="aucun-resultat">Aucun exercice.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (modaleCreationOuverte()) {
+  <div class="modale-fond" (click)="fermerModaleCreation()">
+    <div class="modale" (click)="$event.stopPropagation()">
+      <div class="modale-titre">Nouvel exercice comptable</div>
+      <div class="formulaire">
+        <label>
+          Date de début
+          <app-date-picker [(value)]="dateDebut" />
+        </label>
+        <label>
+          Date de fin
+          <app-date-picker [(value)]="dateFin" />
+        </label>
+        @if (exercices().length === 0) {
+          <span class="champ-info">
+            Premier exercice de l'entreprise : peut dépasser 12 mois (jusqu'à 24 mois).
+          </span>
+        }
+        @if (erreurCreation()) {
+          <app-alert type="error">{{ erreurCreation() }}</app-alert>
+        }
+        <div class="modale-actions">
+          <button type="button" class="btn btn-secondary" (click)="fermerModaleCreation()">
+            Annuler
+          </button>
+          <button type="button" class="btn btn-primary" [disabled]="enCoursCreation()" (click)="creerExercice()">
+            {{ enCoursCreation() ? 'Création…' : 'Créer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (exercicePourCloture(); as ex) {
+  <div class="modale-fond" (click)="annulerCloture()">
+    <div class="modale" (click)="$event.stopPropagation()">
+      <div class="modale-titre">Clôturer l'exercice ?</div>
+      @if (enCoursVerificationCloture()) {
+        <p class="modale-message">Vérification en cours…</p>
+      } @else if (clotureCheck(); as check) {
+        <div class="card" style="margin-bottom: 14px">
+          <div class="page-header" style="margin: 0 0 8px">
+            <span class="kpi-label" style="margin: 0">Écritures validées</span>
+            <strong class="tabular-nums">{{ nombreValideesCloture() }}</strong>
+          </div>
+          <div class="page-header" style="margin: 0">
+            <span class="kpi-label" style="margin: 0">Résultat provisoire</span>
+            <strong class="tabular-nums">{{ formaterResultat(resultatCloture()) }}</strong>
+          </div>
+        </div>
+        @if (check.cloturable) {
+          <p class="modale-message">
+            {{ ex.dateDebut | date: 'dd/MM/yyyy' }} &rarr; {{ ex.dateFin | date: 'dd/MM/yyyy' }}. Toutes les écritures sont validées ou
+            contre-passées. Cette action est définitive (pas de réouverture possible en Phase 1).
+          </p>
+        } @else {
+          <p class="modale-message">
+            Impossible de clôturer : {{ check.nombreBrouillon }} écriture(s) en brouillon et
+            {{ check.nombreEnAttente }} en attente de validation doivent d'abord être traitées.
+          </p>
+        }
+      }
+      @if (erreurCloture()) {
+        <app-alert type="error">{{ erreurCloture() }}</app-alert>
+      }
+      <div class="modale-actions">
+        <button type="button" class="btn btn-secondary" (click)="annulerCloture()">Annuler</button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          [disabled]="!clotureCheck()?.cloturable || enCoursCloture()"
+          (click)="confirmerCloture()"
+        >
+          {{ enCoursCloture() ? 'Clôture…' : 'Clôturer et reporter les à-nouveaux' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

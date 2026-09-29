@@ -1,0 +1,218 @@
+<div class="page-shell">
+  <a routerLink="/" class="retour">&larr; Accueil</a>
+
+  <div class="page-header">
+    <h1 class="page-title" style="margin: 0">Plan comptable</h1>
+    @if (peutCreerCompte()) {
+      <button type="button" class="btn btn-primary" (click)="ouvrirModaleCreation()">
+        + Nouveau compte
+      </button>
+    }
+  </div>
+
+  @if (erreurRecap()) {
+    <app-alert type="error">{{ erreurRecap() }}</app-alert>
+  }
+
+  @if (recap(); as r) {
+    <div class="kpi-grid">
+      <div class="card kpi-card kpi-card--referentiel">
+        <div class="kpi-label">Référentiel actif</div>
+        <div class="kpi-valeur-texte">{{ r.referentielComptableLibelle }}</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-label">Classes</div>
+        <div class="kpi-valeur tabular-nums">{{ r.nombreClasses }}</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-label">Comptes comptables</div>
+        <div class="kpi-valeur tabular-nums">{{ r.nombreComptes }}</div>
+      </div>
+    </div>
+  }
+
+  <div class="plan-comptable-corps">
+    <aside class="classes-rail">
+      <div class="rail-recherche">
+        <input
+          type="search"
+          [value]="queryClasses()"
+          (input)="onSaisieRechercheClasses($any($event.target).value)"
+          placeholder="Rechercher une classe…"
+        />
+      </div>
+
+      @if (erreurClasses()) {
+        <div class="rail-vide">{{ erreurClasses() }}</div>
+      }
+
+      <div class="rail-liste">
+        @for (c of classes(); track c.id) {
+          <button
+            type="button"
+            class="classe-item"
+            [class.actif]="classeSelectionneeId() === c.id"
+            (click)="selectionnerClasse(c)"
+          >
+            <span class="classe-pastille tabular-nums">{{ c.numero }}</span>
+            <span class="classe-texte">
+              <span class="classe-titre">{{ c.titre }}</span>
+              <span class="classe-souligne">{{ c.nombreComptes }} compte(s)</span>
+            </span>
+          </button>
+        } @empty {
+          <div class="rail-vide">Aucune classe.</div>
+        }
+      </div>
+    </aside>
+
+    <section class="table-panel comptes-panneau">
+      @if (classeSelectionnee(); as classe) {
+        @if (rechercheGlobaleActive()) {
+          <div class="panneau-entete">
+            <div class="panneau-entete-texte">
+              <div class="panneau-titre">Résultats pour « {{ queryComptes() }} »</div>
+              <div class="panneau-description">Recherche sur toutes les classes du plan comptable</div>
+            </div>
+          </div>
+        } @else {
+          <div class="panneau-entete">
+            <span class="classe-pastille classe-pastille--grande tabular-nums">{{
+              classe.numero
+            }}</span>
+            <div class="panneau-entete-texte">
+              <div class="panneau-titre">{{ classe.titre }}</div>
+              @if (classe.description) {
+                <div class="panneau-description" [title]="classe.description">
+                  {{ classe.description }}
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="toolbar">
+          <input
+            type="search"
+            [value]="queryComptes()"
+            (input)="onSaisieRechercheComptes($any($event.target).value)"
+            placeholder="Rechercher par numéro ou libellé, dans toutes les classes…"
+          />
+        </div>
+
+        <div class="toolbar">
+          <div class="chip-group">
+            <button
+              type="button"
+              class="chip"
+              [class.actif]="sensFiltre() === ''"
+              (click)="filtrerParSens('')"
+            >
+              Tous
+            </button>
+            <button
+              type="button"
+              class="chip"
+              [class.actif]="sensFiltre() === 'DEBIT'"
+              (click)="filtrerParSens('DEBIT')"
+            >
+              Débit
+            </button>
+            <button
+              type="button"
+              class="chip"
+              [class.actif]="sensFiltre() === 'CREDIT'"
+              (click)="filtrerParSens('CREDIT')"
+            >
+              Crédit
+            </button>
+          </div>
+        </div>
+
+        @if (erreurComptes()) {
+          <app-alert type="error">{{ erreurComptes() }}</app-alert>
+        }
+
+        <table class="table-dense comptes-table">
+          <thead>
+            <tr>
+              <th>Numéro</th>
+              <th>Libellé</th>
+              @if (rechercheGlobaleActive()) {
+                <th>Classe</th>
+              }
+              <th>Sens</th>
+              <th>Lettrable</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of comptes(); track c.id) {
+              <tr>
+                <td class="col-numero tabular-nums">{{ c.numero }}</td>
+                <td>{{ c.libelle }}</td>
+                @if (rechercheGlobaleActive()) {
+                  <td>
+                    @if (classeDuCompte(c); as classeDuCompte) {
+                      <span class="classe-pastille tabular-nums">{{ classeDuCompte.numero }}</span>
+                      {{ classeDuCompte.titre }}
+                    }
+                  </td>
+                }
+                <td>
+                  <span
+                    class="badge-sens"
+                    [class.badge-sens--debit]="c.sensNormal === 'DEBIT'"
+                    [class.badge-sens--credit]="c.sensNormal === 'CREDIT'"
+                  >
+                    {{ c.sensNormal === 'DEBIT' ? 'DÉBIT' : 'CRÉDIT' }}
+                  </span>
+                </td>
+                <td>
+                  @if (c.lettrable) {
+                    <span class="lettrable-oui">&check;</span>
+                  } @else {
+                    <span class="lettrable-non">&mdash;</span>
+                  }
+                </td>
+                <td>
+                  <app-status-badge [tone]="c.actif ? 'success' : 'neutral'">
+                    {{ c.actif ? 'Actif' : 'Inactif' }}
+                  </app-status-badge>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td [attr.colspan]="rechercheGlobaleActive() ? 6 : 5" class="aucun-resultat">
+                  Aucun compte ne correspond.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <div class="table-pagination">
+          <span
+            >Page {{ pageAffichee() }} / {{ totalPages() }} &middot;
+            {{ totalElements() }} compte(s)</span
+          >
+          <div class="pager">
+            <button type="button" [disabled]="estPremierePage()" (click)="pagePrecedente()">
+              &lsaquo;
+            </button>
+            <button type="button" [disabled]="estDernierePage()" (click)="pageSuivante()">
+              &rsaquo;
+            </button>
+          </div>
+        </div>
+      }
+    </section>
+  </div>
+</div>
+
+@if (modaleCreationOuverte()) {
+  <app-compte-comptable-creation-modal
+    (ferme)="fermerModaleCreation()"
+    (compteCree)="onCompteCree()"
+  />
+}

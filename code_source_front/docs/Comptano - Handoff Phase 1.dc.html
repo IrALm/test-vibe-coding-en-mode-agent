@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="omelette-owns-print" content="true">
+  <style>doc-page:not(:defined){visibility:hidden}
+    body{margin:0}
+    table{border-collapse:collapse;width:100%;font-size:13px;margin:6px 0;}
+    th,td{border:1px solid #ddd;padding:6px 10px;text-align:left;vertical-align:top;}
+    th{background:#f3f1ee;font-weight:600;}
+    code{font-family:'SFMono-Regular',Consolas,monospace;font-size:12.5px;background:#f3f1ee;padding:1px 5px;border-radius:3px;}
+    h2{border-bottom:2px solid #b5652e;padding-bottom:4px;margin-top:30px;}
+    h3{margin-top:20px;color:#8a4f24;}
+    .callout{background:#faf6f0;border-left:3px solid #b5652e;padding:12px 16px;border-radius:0 6px 6px 0;break-inside:avoid;margin:10px 0;}
+    .callout--ouvert{background:#fdf3e9;border-left-color:#c2761a;}
+    ul{padding-left:20px;}
+    li{margin:3px 0;}
+    .tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:4px;background:#f2ddc9;color:#8a4f24;margin-left:6px;}
+    .tag--ouvert{background:#fde3c4;color:#a05a12;}
+    .col-montant{text-align:right;font-variant-numeric:tabular-nums;}
+    .swatch{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px;}
+  </style>
+</helmet>
+<x-import component-from-global-scope="doc-page" from="./doc-page.js" size="letter" orientation="portrait" margin="0.85in" hint-size="100%,100%">
+
+<h1>Comptano — Handoff Phase 1 : Moteur comptable</h1>
+<p style="color:#666;margin-top:-8px;">Exercices, journal général, écritures en partie double, grand livre, balance, clôture — septembre 2026</p>
+
+<div class="callout">Ce document décrit <strong>quoi</strong> construire et <strong>pourquoi</strong>, pour qu'une session Claude Design puisse proposer les maquettes des écrans. Respecter le design system existant (<code>Walsia Design System.dc.html</code>) : tokens anthracite/cuivre, clair/sombre, composants déjà en place — <code>.table-panel</code>/<code>.table-dense</code> (listes paginées), rail filtrable <code>.classes-rail</code> (sélecteur classe→compte), modale-stepper <code>.stepper</code>/<code>.segmented</code>, cartes KPI <code>.kpi-grid</code>, badges de rôle <code>--role-*</code>. Deux tokens existent déjà et doivent être réutilisés partout où débit/crédit apparaît : <span class="swatch" style="background:#28241f"></span><code>--debit</code> et <span class="swatch" style="background:#a8672a"></span><code>--credit</code> (mêmes teintes que <code>.badge-sens--debit</code>/<code>--credit</code> déjà utilisés en plan comptable).</div>
+
+<h2>A. Cadrage — ce qui est déjà tranché</h2>
+<p>Quatre points ouverts du cahier des charges (§1.7) ont été tranchés avant ce handoff — ne pas les rouvrir sans une décision explicite de l'utilisateur :</p>
+<table>
+<thead><tr><th>Sujet</th><th>Décision</th></tr></thead>
+<tbody>
+<tr><td>Journaux auxiliaires</td><td><strong>Reportés à la Phase 2.</strong> Un seul journal — le journal général — existe en Phase 1. Il est <strong>auto-provisionné</strong> à la création de l'entreprise (comme le plan comptable), pas de gestion de journaux à maquetter.</td></tr>
+<tr><td>Qui valide une écriture</td><td><strong>Séparation des tâches.</strong> N'importe quel rôle habilité à la saisie (COMPTABLE, ADMIN_FINANCIER, ADMIN) peut créer un brouillon. Seuls <strong>ADMIN</strong> et <strong>ADMIN_FINANCIER</strong> peuvent valider — l'action/l'écran de validation doit être <strong>invisible</strong> pour les autres rôles, pas seulement désactivé.</td></tr>
+<tr><td>Réouverture d'exercice clôturé</td><td><strong>Non prévue</strong> en Phase 1. Un exercice clôturé est en lecture seule, sans action de réouverture nulle part dans l'UI.</td></tr>
+<tr><td>Devise &amp; arrondis</td><td>Choisie <strong>une seule fois à la création de l'entreprise</strong> (comme le référentiel comptable), parmi <strong>CDF</strong> (0 décimale), <strong>USD</strong> ou <strong>EUR</strong> (2 décimales). <strong>Pas de multi-devise</strong> : une entreprise a une seule devise de tenue, aucune conversion/taux de change à maquetter.</td></tr>
+<tr><td>Contre-passation</td><td>L'écriture miroir générée <strong>repasse par la file d'attente de validation</strong> (§G), exactement comme une écriture normale — <strong>pas</strong> de validation automatique.</td></tr>
+<tr><td>Clôture d'exercice</td><td><strong>Bloquée</strong> tant qu'il reste des écritures en brouillon ou en attente de validation sur l'exercice — pas un simple avertissement non bloquant.</td></tr>
+</tbody>
+</table>
+
+<h2>B. Rôles &amp; permissions</h2>
+<table>
+<thead><tr><th>Action</th><th>ADMIN</th><th>ADMIN_FINANCIER</th><th>COMPTABLE</th><th>Autres rôles authentifiés</th></tr></thead>
+<tbody>
+<tr><td>Créer un exercice comptable</td><td>✓</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Clôturer un exercice</td><td>✓</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Saisir une écriture (brouillon)</td><td>✓</td><td>✓</td><td>✓</td><td>—</td></tr>
+<tr><td>Valider une écriture</td><td>✓</td><td>✓</td><td>—</td><td>—</td></tr>
+<tr><td>Contre-passer une écriture validée</td><td>✓</td><td>✓</td><td>—</td><td>—</td></tr>
+<tr><td>Consulter grand livre / balance</td><td>✓</td><td>✓</td><td>✓</td><td>✓ (lecture seule, comme Plan comptable/Tiers)</td></tr>
+</tbody>
+</table>
+<div class="callout">La file d'attente de validation (§G) et le bouton « Valider » ne doivent apparaître nulle part dans l'UI d'un COMPTABLE — cohérent avec le principe déjà appliqué au bouton « + Nouveau compte » du Plan comptable, conditionné par rôle.</div>
+
+<h2>C. Écran Compte — ajout devise entreprise</h2>
+<p>Extension de l'écran Compte existant (onglet Infos, carte Entreprise) et du formulaire de création d'entreprise.</p>
+<ul>
+<li>Nouveau champ <strong>Devise</strong> (segmented control 3 options : CDF / USD / EUR) dans le formulaire de création d'entreprise, au même niveau que le choix du référentiel comptable.</li>
+<li>Carte Entreprise (écran Compte) : mini-KPI « Devise » ajoutée à côté de Type/Pays déjà existants — texte seul (ex. « CDF »), pas modifiable après création.</li>
+</ul>
+
+<h2>D. Écran Gestion des exercices comptables <span class="tag">nouveau</span></h2>
+<h3>D.1 — Liste des exercices</h3>
+<ul>
+<li>Table dense (pattern <code>.table-panel</code>/<code>.table-dense</code>) : colonnes Période (dates début–fin), Statut (badge Ouvert/vert vs Clôturé/gris), Résultat (une fois clôturé, montant coloré selon signe), Actions.</li>
+<li>Bouton « + Nouvel exercice » (ADMIN uniquement) — ouvre une modale simple (pas de stepper nécessaire, 2 champs) : date de début, date de fin. Message d'aide explicite pour le <strong>premier exercice</strong> : peut dépasser 12 mois (jusqu'à 24 mois), pas de contrôle bloquant sur la durée pour ce cas.</li>
+<li>Un seul exercice « Ouvert » à la fois par entreprise — le bouton de création est désactivé/masqué si un exercice ouvert existe déjà, avec message explicatif.</li>
+</ul>
+<h3>D.2 — Clôture d'un exercice</h3>
+<ul>
+<li>Depuis la ligne d'un exercice ouvert : action « Clôturer » (ADMIN) → modale de confirmation avec résumé avant clôture (nb écritures validées, résultat provisoire calculé).</li>
+<li>Le bouton « Clôturer » est <strong>désactivé</strong> (avec message explicatif) tant qu'il reste des écritures en brouillon ou en attente de validation sur l'exercice — la modale de résumé les compte explicitement plutôt que de simplement avertir.</li>
+<li>Après confirmation : écran de résultat (pattern <code>.succes-ecran</code>) confirmant la génération des à-nouveaux, avec résumé (nb de comptes de bilan reportés).</li>
+</ul>
+
+<h2>E. Écran Saisie d'une écriture <span class="tag">nouveau</span></h2>
+<ul>
+<li>Formulaire pleine page (pas modale, contenu trop riche) : en-tête avec exercice actif affiché (lecture seule) et référence pièce justificative (texte libre — le rattachement physique du document arrive en Phase 5).</li>
+<li><strong>Lignes dynamiques</strong> (2 minimum) : chaque ligne = sélecteur de compte (réutilise le pattern rail/sélecteur classe→compte déjà en place pour la création de compte), segmented Débit/Crédit (tokens <code>--debit</code>/<code>--credit</code>), montant (formaté selon la devise/décimales de l'entreprise), libellé de ligne. Boutons « + Ajouter une ligne » / retirer une ligne (icône, pas avant la 3ᵉ ligne présente).</li>
+<li><strong>Bandeau d'équilibre</strong> persistant en bas de formulaire : Σ débits / Σ crédits / écart, viré au vert quand équilibré, orange sinon. Le bouton « Enregistrer en brouillon » reste actif même déséquilibré ; un bouton distinct « Soumettre à validation » (ou finaliser le brouillon) est <strong>désactivé tant que Σ débits ≠ Σ crédits</strong> — c'est le contrôle bloquant du §1.3 du cahier des charges.</li>
+<li>Écriture datée hors des bornes de l'exercice actif ou sur un exercice clôturé : champ date en erreur immédiate, pas d'appel serveur inutile.</li>
+</ul>
+
+<h2>F. Écran Liste des écritures + détail <span class="tag">nouveau</span></h2>
+<h3>F.1 — Liste</h3>
+<ul>
+<li>Pattern recherche/filtre/pagination déjà établi (Tiers, Utilisateurs) : chips de statut (Brouillon / En attente de validation / Validée / Contre-passée), recherche texte (libellé, référence pièce), colonnes Date, Journal (toujours « Journal général » en Phase 1), Référence, Montant total, Statut.</li>
+</ul>
+<h3>F.2 — Détail d'une écriture</h3>
+<ul>
+<li>Lignes de l'écriture en tableau (compte, sens, montant, libellé) + bandeau d'équilibre (lecture seule si validée).</li>
+<li>Historique : créée par / le, validée par / le (si applicable), contre-passée par / le + lien vers l'écriture miroir (si applicable).</li>
+<li>Actions contextuelles : « Modifier » (brouillon + auteur uniquement), « Valider » (ADMIN/ADMIN_FINANCIER, brouillon équilibré uniquement), « Contre-passer » (ADMIN/ADMIN_FINANCIER, écriture validée uniquement — <strong>jamais</strong> de bouton Modifier/Supprimer sur une écriture validée, cf. §1.3 immutabilité).</li>
+</ul>
+
+<h2>G. File d'attente de validation <span class="tag">nouveau — ADMIN / ADMIN_FINANCIER uniquement</span></h2>
+<ul>
+<li>Vue filtrée des écritures en brouillon équilibrées, triées par date de soumission. Action rapide « Valider » directement en ligne (pattern toast succès déjà utilisé pour activer/désactiver un utilisateur) + accès au détail complet.</li>
+<li>KPI en tête de page (pattern <code>.kpi-grid</code>) : nb en attente, nb validées aujourd'hui.</li>
+<li>Cet écran entier — y compris son entrée de menu/onglet — n'existe pas dans le parcours d'un COMPTABLE.</li>
+</ul>
+
+<h2>H. Contre-passation (extourne)</h2>
+<ul>
+<li>Depuis le détail d'une écriture validée (§F.2), bouton « Contre-passer » → modale de confirmation (motif optionnel en texte libre) → génère une nouvelle écriture avec les mêmes lignes, sens inversés, référencant l'écriture d'origine.</li>
+<li>Statut de l'écriture miroir : créée en <strong>brouillon</strong>, elle apparaît dans la file d'attente de validation (§G) comme n'importe quelle écriture — même séparation des tâches, pas de raccourci de validation automatique.</li>
+<li><strong>Rappel</strong> : la contre-passation n'a rien à voir avec le lettrage (<code>CompteComptable.lettrable</code>, déjà en base mais pas encore exploité) — le lettrage rapproche des écritures indépendantes sur un compte tiers (facture/règlement), sujet de la Phase 2. La contre-passation corrige une seule écriture erronée. Ne pas fusionner les deux concepts dans l'UI.</li>
+</ul>
+
+<h2>I. Écran Grand livre <span class="tag">nouveau</span></h2>
+<ul>
+<li>Layout à deux zones (réutilise le rail filtrable <code>.classes-rail</code> du Plan comptable) : rail de sélection du compte à gauche, contenu à droite.</li>
+<li>Zone droite : sélecteur de période (bornée à l'exercice actif ou un exercice clôturé consultable), tableau chronologique des mouvements du compte (date, libellé, référence écriture, débit, crédit, <strong>solde progressif</strong> en colonne <code>col-montant</code>), solde d'ouverture affiché en première ligne.</li>
+<li>Purement dérivé/lecture seule — aucune saisie possible depuis cet écran.</li>
+</ul>
+
+<h2>J. Écran Balance générale <span class="tag">nouveau</span></h2>
+<ul>
+<li>Sélecteur de période en tête de page. Table dense : Numéro, Libellé compte, Total débit, Total crédit, Solde (débiteur/créditeur, coloré via <code>--debit</code>/<code>--credit</code>).</li>
+<li>Ligne de total en pied de tableau + <strong>bandeau de contrôle d'équilibre</strong> explicite (Σ soldes débiteurs = Σ soldes créditeurs) — reprend le même motif visuel que le bandeau d'équilibre de la saisie d'écriture (§E), c'est le même invariant comptable rendu visible à deux endroits différents.</li>
+</ul>
+
+<h2>K. Récapitulatif — tableau de bord Comptabilité <span class="tag">nouveau</span></h2>
+<p>Page d'accueil du module (pattern KPI déjà utilisé pour Plan comptable/Tiers) : exercice actif (dates + statut), nb écritures brouillon, nb en attente de validation, nb validées, résultat provisoire. Sert de point d'entrée vers D/E/F/G/I/J.</p>
+
+<h2>L. Checklist d'implémentation</h2>
+<ul>
+<li>[ ] Compte : champ Devise à la création d'entreprise (segmented CDF/USD/EUR) + mini-KPI Devise sur la carte Entreprise</li>
+<li>[ ] Gestion des exercices : liste, création (2 champs, message premier exercice), badge statut, un seul exercice ouvert à la fois</li>
+<li>[ ] Clôture d'exercice : modale résumé + écran de confirmation à-nouveaux</li>
+<li>[ ] Saisie d'écriture : lignes dynamiques, sélecteur compte (rail), segmented débit/crédit, bandeau d'équilibre temps réel, blocage soumission si déséquilibré</li>
+<li>[ ] Liste des écritures : filtres statut, recherche, pagination (pattern existant)</li>
+<li>[ ] Détail d'écriture : historique, actions contextuelles par rôle/statut, jamais d'édition sur écriture validée</li>
+<li>[ ] File d'attente de validation : écran + entrée de menu visibles uniquement ADMIN/ADMIN_FINANCIER</li>
+<li>[ ] Contre-passation : modale + écriture miroir créée en brouillon, visible dans la file d'attente de validation (§G)</li>
+<li>[ ] Clôture d'exercice : bouton désactivé tant qu'il reste des brouillons/écritures en attente sur l'exercice</li>
+<li>[ ] Grand livre : rail sélection compte + tableau mouvements + solde progressif</li>
+<li>[ ] Balance générale : tableau + bandeau de contrôle d'équilibre</li>
+<li>[ ] Tableau de bord Comptabilité : KPI d'entrée du module</li>
+<li>[ ] Respect tokens design system (clair/sombre), notamment <code>--debit</code>/<code>--credit</code> partout où un sens apparaît</li>
+</ul>
+
+<div class="callout">En cas de doute sur un espacement, une couleur ou un composant déjà existant, les fichiers <code>Walsia Design System.dc.html</code> et les maquettes déjà livrées (<code>Comptano - Ecran Compte.dc.html</code>, <code>Comptano - Gestion Utilisateurs.dc.html</code>) font foi.</div>
+
+</x-import>
+
+</x-dc>
+</body>
+</html>

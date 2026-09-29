@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @keyframes ds-fade { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    body { margin: 0; }
+  </style>
+</helmet>
+<div style="{{ rootVars }}">
+<div style="min-height:100vh;background:var(--bg);font-family:var(--font-sans);color:var(--text);transition:background 0.2s,color 0.2s;">
+
+  <!-- Header -->
+  <div style="position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--surface);border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--n-800);border:3px solid var(--copper-500);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span style="font-size:17px;font-weight:800;color:{{ logoLetterColor }};">C</span>
+      </div>
+      <div>
+        <div style="font-size:16px;font-weight:700;">Comptano — Design System</div>
+        <div style="font-size:12px;color:var(--text-muted);">Comptabilité OHADA · light / dark</div>
+      </div>
+    </div>
+    <button onClick="{{ toggleTheme }}" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;">
+      <span>{{ themeLabel }}</span>
+    </button>
+  </div>
+
+  <div style="max-width:1180px;margin:0 auto;padding:40px 32px 120px;display:flex;flex-direction:column;gap:64px;">
+
+    <!-- FOUNDATIONS: Colors -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Fondations</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 20px;">Couleurs</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;">
+        <sc-for list="{{ colorSwatches }}" as="sw" hint-placeholder-count="8">
+          <div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);">
+            <div style="height:64px;background:{{ sw.value }};"></div>
+            <div style="padding:10px 12px;background:var(--surface);">
+              <div style="font-size:12px;font-weight:600;">{{ sw.name }}</div>
+              <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">{{ sw.token }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- FOUNDATIONS: Typography -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Fondations</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 20px;">Typographie</h2>
+      <div style="display:flex;flex-direction:column;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;">
+        <div style="font-size:36px;font-weight:700;">Bilan &amp; compte de résultat</div>
+        <div style="font-size:22px;font-weight:600;">Balance générale — Exercice 2026</div>
+        <div style="font-size:16px;font-weight:500;">Journal des achats — 128 écritures</div>
+        <div style="font-size:14px;color:var(--text-muted);">Texte courant : montants, libellés, descriptions de compte.</div>
+        <div style="font-size:14px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;background:var(--surface-sunken);border-radius:6px;padding:10px 14px;width:fit-content;">1 250 000,00 · 87 340,50 · chiffres tabulaires</div>
+      </div>
+    </section>
+
+    <!-- FOUNDATIONS: Spacing -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Fondations</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 20px;">Espacement &amp; densité</h2>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px;">Ligne confortable — 44px</div>
+          <div style="display:flex;align-items:center;height:44px;border-bottom:1px solid var(--border);padding:0 12px;font-size:14px;width:260px;">Charges de personnel</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px;">Ligne dense (saisie) — 34px</div>
+          <div style="display:flex;align-items:center;height:34px;border-bottom:1px solid var(--border);padding:0 12px;font-size:13px;width:260px;">Charges de personnel</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTS: Buttons -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Composants</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 20px;">Boutons</h2>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <button style="height:38px;padding:0 18px;border-radius:6px;border:none;background:var(--accent);color:var(--text-on-accent);font-weight:600;font-size:14px;cursor:pointer;">Créer un compte</button>
+        <button style="height:38px;padding:0 18px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-weight:600;font-size:14px;cursor:pointer;">Se connecter</button>
+        <button style="height:38px;padding:0 18px;border-radius:6px;border:none;background:transparent;color:var(--text);font-weight:600;font-size:14px;cursor:pointer;">Annuler</button>
+        <button style="height:38px;padding:0 18px;border-radius:6px;border:none;background:var(--error);color:white;font-weight:600;font-size:14px;cursor:pointer;">Supprimer</button>
+        <button disabled="" style="height:38px;padding:0 18px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-weight:600;font-size:14px;opacity:0.45;cursor:not-allowed;">Désactivé</button>
+      </div>
+    </section>
+
+    <!-- COMPONENTS: Badges -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Composants</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 6px;">Badges de statut</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;">
+        <span style="padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background:var(--n-200);color:var(--n-700);">Brouillon</span>
+        <span style="padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background:var(--warning-soft);color:var(--warning-on-soft);">En attente</span>
+        <span style="padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background:var(--success-soft);color:var(--success-on-soft);">Validée</span>
+        <span style="padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background:var(--accent-soft);color:var(--accent-on-soft);">Payée</span>
+        <span style="padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background:var(--error-soft);color:var(--error-on-soft);">Rejetée</span>
+      </div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 6px;">Badges de rôle</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <sc-for list="{{ roles }}" as="r" hint-placeholder-count="6">
+          <span style="padding:4px 12px;border-radius:6px;font-size:12px;font-weight:700;letter-spacing:0.02em;background:{{ r.bg }};color:{{ r.fg }};border:1px solid {{ r.border }};">{{ r.label }}</span>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- COMPONENTS: Alerts -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Composants</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 20px;">Alertes</h2>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 16px;border-radius:8px;background:var(--error-soft);color:var(--error-on-soft);font-size:14px;border:1px solid var(--error-soft);">
+          <strong>Écriture déséquilibrée —</strong> le total débit (450 000) ne correspond pas au total crédit (448 500).
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 16px;border-radius:8px;background:var(--warning-soft);color:var(--warning-on-soft);font-size:14px;">
+          <strong>Session bientôt expirée —</strong> reconnectez-vous pour continuer votre saisie.
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 16px;border-radius:8px;background:var(--success-soft);color:var(--success-on-soft);font-size:14px;">
+          <strong>Exercice clôturé —</strong> la balance a été générée avec succès.
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTS: Forms -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Composants</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 20px;">Formulaires</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:760px;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <label style="font-size:13px;font-weight:600;">Raison sociale</label>
+          <input type="text" placeholder="Ex: Walsia SARL" style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;"></input>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <label style="font-size:13px;font-weight:600;">Référentiel comptable</label>
+          <select style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;">
+            <option>SYSCOHADA Normal</option>
+            <option>SYSCOHADA SMT</option>
+            <option>SYCEBNL</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;grid-column:1/-1;">
+          <label style="font-size:13px;font-weight:600;">Email administrateur</label>
+          <input type="email" value="admin@walsia" style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--error);background:var(--surface);color:var(--text);font-size:14px;"></input>
+          <span style="font-size:12px;color:var(--error);">Adresse email invalide.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTS: Stepper -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Composants</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 6px;">Formulaire par étapes — Création d'entreprise</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin:0 0 20px;">Même pattern à réutiliser pour toute création multi-champs (utilisateur, exercice comptable, etc).</p>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:640px;">
+        <div style="display:flex;align-items:center;margin-bottom:28px;">
+          <sc-for list="{{ steps }}" as="step" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;flex:1;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;">
+                <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:{{ step.circleBg }};color:{{ step.circleFg }};border:{{ step.circleBorder }};">{{ step.markContent }}</div>
+                <span style="font-size:12px;font-weight:600;color:{{ step.labelColor }};white-space:nowrap;">{{ step.label }}</span>
+              </div>
+              <sc-if value="{{ step.hasLine }}">
+                <div style="height:2px;flex:1;background:{{ step.lineColor }};margin:0 10px 20px;"></div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ stepIs1 }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="font-size:13px;font-weight:600;">Raison sociale</label>
+              <input type="text" placeholder="Ex: Walsia SARL" style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;"></input>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="font-size:13px;font-weight:600;">Pays</label>
+              <select style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;">
+                <option>RD Congo</option>
+                <option>Sénégal</option>
+                <option>Côte d'Ivoire</option>
+              </select>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ stepIs2 }}">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="font-size:13px;font-weight:600;">Référentiel comptable</label>
+              <select style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;">
+                <option>SYSCOHADA Normal</option>
+                <option>SYSCOHADA SMT</option>
+                <option>SYCEBNL</option>
+              </select>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="font-size:13px;font-weight:600;">Devise</label>
+              <select style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;">
+                <option>Franc congolais (CDF)</option>
+                <option>Franc CFA (XOF)</option>
+              </select>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ stepIs3 }}">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="font-size:13px;font-weight:600;">Nom de l'administrateur</label>
+              <input type="text" placeholder="Ex: Aline Mbala" style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;"></input>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="font-size:13px;font-weight:600;">Email</label>
+              <input type="email" placeholder="admin@entreprise.cd" style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;"></input>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;justify-content:space-between;margin-top:24px;">
+          <button onClick="{{ prevStep }}" style="{{ prevBtnStyle }}">Précédent</button>
+          <button onClick="{{ nextStep }}" style="height:38px;padding:0 20px;border-radius:6px;border:none;background:var(--accent);color:var(--text-on-accent);font-weight:600;font-size:14px;cursor:pointer;">{{ nextBtnLabel }}</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTS: Table -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Composants</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 6px;">Table dense — Journal des écritures</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Tri par colonne, montants alignés en tabulaire, débit/crédit distingués par teinte.</p>
+      <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface);">
+        <div style="display:grid;grid-template-columns:100px 1fr 140px 140px 110px;background:var(--surface-2);border-bottom:1px solid var(--border);">
+          <div onClick="{{ sortByDate }}" style="padding:0 12px;height:36px;display:flex;align-items:center;font-size:12px;font-weight:700;color:var(--text-muted);cursor:pointer;">Date {{ sortArrow.date }}</div>
+          <div onClick="{{ sortByLibelle }}" style="padding:0 12px;height:36px;display:flex;align-items:center;font-size:12px;font-weight:700;color:var(--text-muted);cursor:pointer;">Libellé {{ sortArrow.libelle }}</div>
+          <div onClick="{{ sortByDebit }}" style="padding:0 12px;height:36px;display:flex;align-items:center;justify-content:flex-end;font-size:12px;font-weight:700;color:var(--text-muted);cursor:pointer;">Débit {{ sortArrow.debit }}</div>
+          <div onClick="{{ sortByCredit }}" style="padding:0 12px;height:36px;display:flex;align-items:center;justify-content:flex-end;font-size:12px;font-weight:700;color:var(--text-muted);cursor:pointer;">Crédit {{ sortArrow.credit }}</div>
+          <div style="padding:0 12px;height:36px;display:flex;align-items:center;font-size:12px;font-weight:700;color:var(--text-muted);">Statut</div>
+        </div>
+        <sc-for list="{{ sortedRows }}" as="row" hint-placeholder-count="5">
+          <div style="display:grid;grid-template-columns:100px 1fr 140px 140px 110px;border-bottom:1px solid var(--border);">
+            <div style="padding:0 12px;height:34px;display:flex;align-items:center;font-size:13px;color:var(--text-muted);">{{ row.date }}</div>
+            <div style="padding:0 12px;height:34px;display:flex;align-items:center;font-size:13px;">{{ row.libelle }}</div>
+            <div style="padding:0 12px;height:34px;display:flex;align-items:center;justify-content:flex-end;font-size:13px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--debit);">{{ row.debitFmt }}</div>
+            <div style="padding:0 12px;height:34px;display:flex;align-items:center;justify-content:flex-end;font-size:13px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--credit);">{{ row.creditFmt }}</div>
+            <div style="padding:0 12px;height:34px;display:flex;align-items:center;">
+              <span style="padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;background:{{ row.statusBg }};color:{{ row.statusFg }};">{{ row.status }}</span>
+            </div>
+          </div>
+        </sc-for>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;font-size:12px;color:var(--text-muted);">
+          <span>5 sur 128 écritures</span>
+          <div style="display:flex;gap:6px;">
+            <button style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);cursor:pointer;">‹</button>
+            <button style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);cursor:pointer;">›</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTS: Dashboard cards -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Composants</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 20px;">Cards KPI (tableau de bord)</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+        <sc-for list="{{ kpis }}" as="kpi" hint-placeholder-count="3">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;">
+            <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">{{ kpi.label }}</div>
+            <div style="font-size:26px;font-weight:700;font-family:var(--font-mono);font-variant-numeric:tabular-nums;">{{ kpi.value }}</div>
+            <div style="font-size:12px;font-weight:600;margin-top:6px;color:{{ kpi.trendColor }};">{{ kpi.trend }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- COMPONENTS: Navigation -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Composants</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 6px;">Navigation — conditionnée par rôle</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Changez de rôle pour voir la navigation latérale s'adapter.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <sc-for list="{{ roleButtons }}" as="r" hint-placeholder-count="6">
+          <button onClick="{{ r.onClick }}" style="{{ r.style }}">{{ r.label }}</button>
+        </sc-for>
+      </div>
+      <div style="display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;min-height:260px;">
+        <div style="width:210px;background:var(--surface-2);border-right:1px solid var(--border);padding:16px 0;">
+          <sc-for list="{{ navItemsForRole }}" as="item" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:10px;padding:0 20px;height:40px;font-size:13px;font-weight:600;color:{{ item.active ? 'var(--accent)' : 'var(--text)' }};background:{{ item.active ? 'var(--accent-soft)' : 'transparent' }};border-right:{{ item.active ? '3px solid var(--accent)' : '3px solid transparent' }};">{{ item.label }}</div>
+          </sc-for>
+        </div>
+        <div style="flex:1;background:var(--surface);padding:24px;">
+          <div style="font-size:14px;color:var(--text-muted);">Contenu de la vue « {{ activeRoleLabel }} » — zone principale.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTS: Modal (stepper) -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Composants</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 6px;">Panneau modal — Nouvel utilisateur (par étapes)</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin:0 0 20px;">Même pattern d'étapes que la création d'entreprise, dans un panneau modal.</p>
+      <button onClick="{{ openModal }}" style="height:38px;padding:0 18px;border-radius:6px;border:none;background:var(--accent);color:var(--text-on-accent);font-weight:600;font-size:14px;cursor:pointer;">Nouvel utilisateur</button>
+      <sc-if value="{{ modalOpen }}">
+        <div style="position:fixed;inset:0;background:oklch(0 0 0 / 0.45);display:flex;align-items:center;justify-content:center;z-index:50;animation:ds-fade 0.15s ease-out;">
+          <div style="background:var(--surface);border-radius:12px;padding:28px;width:440px;box-shadow:var(--shadow-lg);border:1px solid var(--border);">
+            <div style="font-size:17px;font-weight:700;margin-bottom:20px;">Créer un utilisateur</div>
+
+            <div style="display:flex;align-items:center;margin-bottom:24px;">
+              <sc-for list="{{ userSteps }}" as="step" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;flex:1;">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;">
+                    <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:{{ step.circleBg }};color:{{ step.circleFg }};border:{{ step.circleBorder }};">{{ step.markContent }}</div>
+                    <span style="font-size:11px;font-weight:600;color:{{ step.labelColor }};white-space:nowrap;">{{ step.label }}</span>
+                  </div>
+                  <sc-if value="{{ step.hasLine }}">
+                    <div style="height:2px;flex:1;background:{{ step.lineColor }};margin:0 8px 18px;"></div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+
+            <sc-if value="{{ userStepIs1 }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                  <input type="text" placeholder="Nom" style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;"></input>
+                  <input type="text" placeholder="Post-nom" style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;"></input>
+                </div>
+                <input type="text" placeholder="Prénom" style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;"></input>
+                <input type="email" placeholder="Adresse email" style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;"></input>
+              </div>
+            </sc-if>
+            <sc-if value="{{ userStepIs2 }}">
+              <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+                <label style="font-size:13px;font-weight:600;">Rôle</label>
+                <select style="height:38px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:14px;">
+                  <option>COMPTABLE</option>
+                  <option>RH</option>
+                  <option>ACHATS</option>
+                  <option>CAISSIER</option>
+                  <option>LECTURE_SEULE</option>
+                </select>
+                <span style="font-size:12px;color:var(--text-muted);">Le rôle détermine la navigation et les permissions accordées.</span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ userStepIs3 }}">
+              <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;background:var(--surface-sunken);border-radius:8px;padding:16px;">
+                <div style="font-size:13px;color:var(--text-muted);">Un email d'invitation sera envoyé pour la définition du mot de passe.</div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--text-muted);">Nom</span><span style="font-weight:600;">Mbala Kanku Aline</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--text-muted);">Rôle</span><span style="font-weight:600;">COMPTABLE</span></div>
+              </div>
+            </sc-if>
+
+            <div style="display:flex;justify-content:space-between;gap:10px;">
+              <button onClick="{{ userPrevOrClose }}" style="{{ userPrevBtnStyle }}">{{ userPrevBtnLabel }}</button>
+              <button onClick="{{ userNextOrCreate }}" style="height:36px;padding:0 16px;border-radius:6px;border:none;background:var(--accent);color:var(--text-on-accent);font-weight:600;font-size:13px;cursor:pointer;">{{ userNextBtnLabel }}</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+
+    <!-- COMPONENTS: Search & sort -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Composants</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 6px;">Recherche &amp; tri — Liste des utilisateurs</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;">Pattern réutilisable : barre de recherche, filtres en chips, en-têtes triables, pagination.</p>
+      <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface);">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+          <div style="position:relative;flex:1;min-width:200px;">
+            <input type="text" value="{{ searchQuery }}" onChange="{{ onSearchChange }}" placeholder="Rechercher par nom ou email…" style="width:100%;height:36px;padding:0 12px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-size:13px;box-sizing:border-box;"></input>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <sc-for list="{{ roleFilterChips }}" as="chip" hint-placeholder-count="4">
+              <button onClick="{{ chip.onClick }}" style="{{ chip.style }}">{{ chip.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1.4fr 130px 90px;background:var(--surface-2);border-bottom:1px solid var(--border);">
+          <div onClick="{{ userSortByName }}" style="padding:0 16px;height:36px;display:flex;align-items:center;font-size:12px;font-weight:700;color:var(--text-muted);cursor:pointer;">Nom {{ userSortArrow.name }}</div>
+          <div onClick="{{ userSortByEmail }}" style="padding:0 16px;height:36px;display:flex;align-items:center;font-size:12px;font-weight:700;color:var(--text-muted);cursor:pointer;">Email {{ userSortArrow.email }}</div>
+          <div style="padding:0 16px;height:36px;display:flex;align-items:center;font-size:12px;font-weight:700;color:var(--text-muted);">Rôle</div>
+          <div style="padding:0 16px;height:36px;display:flex;align-items:center;font-size:12px;font-weight:700;color:var(--text-muted);">Actif</div>
+        </div>
+        <sc-for list="{{ filteredUsers }}" as="u" hint-placeholder-count="5">
+          <div style="display:grid;grid-template-columns:1fr 1.4fr 130px 90px;border-bottom:1px solid var(--border);">
+            <div style="padding:0 16px;height:44px;display:flex;align-items:center;font-size:13px;font-weight:600;">{{ u.name }}</div>
+            <div style="padding:0 16px;height:44px;display:flex;align-items:center;font-size:13px;color:var(--text-muted);">{{ u.email }}</div>
+            <div style="padding:0 16px;height:44px;display:flex;align-items:center;">
+              <span style="padding:2px 10px;border-radius:6px;font-size:11px;font-weight:700;background:{{ u.roleBg }};color:{{ u.roleFg }};border:1px solid {{ u.roleBorder }};">{{ u.role }}</span>
+            </div>
+            <div style="padding:0 16px;height:44px;display:flex;align-items:center;">
+              <span style="width:8px;height:8px;border-radius:50%;background:{{ u.activeColor }};"></span>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noResults }}">
+          <div style="padding:32px 16px;text-align:center;font-size:13px;color:var(--text-muted);">Aucun utilisateur ne correspond à cette recherche.</div>
+        </sc-if>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;font-size:12px;color:var(--text-muted);">
+          <span>{{ resultsCountLabel }}</span>
+          <div style="display:flex;gap:6px;">
+            <button style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);cursor:pointer;">‹</button>
+            <button style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);cursor:pointer;">›</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN: Onboarding -->
+    <section>
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">Écran</div>
+      <h2 style="font-size:22px;font-weight:700;margin:0 0 6px;">Accueil non connecté</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin:0 0 20px;">Le logo s'adapte au thème (mode clair : marque cuivre habituelle · mode sombre : marque assombrie).</p>
+      <div style="border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--surface);max-width:480px;">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:72px 40px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:var(--n-800);border:3px solid var(--copper-500);display:flex;align-items:center;justify-content:center;">
+            <span style="font-size:30px;font-weight:800;color:{{ logoLetterColor }};">C</span>
+          </div>
+          <div>
+            <div style="font-size:26px;font-weight:700;margin-bottom:8px;">Comptano</div>
+            <div style="font-size:14px;color:var(--text-muted);max-width:320px;">La comptabilité conforme OHADA, pensée pour votre entreprise.</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px;">
+            <button style="height:44px;border-radius:6px;border:none;background:var(--accent);color:var(--text-on-accent);font-weight:600;font-size:14px;cursor:pointer;">Créer un compte pour votre entreprise</button>
+            <button style="height:44px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);font-weight:600;font-size:14px;cursor:pointer;">Se connecter</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    theme: 'light',
+    sortKey: 'date',
+    sortDir: 'asc',
+    activeRole: 'ADMIN',
+    modalOpen: false,
+    onboardingStep: 1,
+    userStep: 1,
+    searchQuery: '',
+    roleFilter: 'Tous',
+    userSortKey: 'name',
+    userSortDir: 'asc',
+  };
+
+  stepLabels = ['Entreprise', 'Référentiel', 'Administrateur'];
+
+  darkAnthracite = {
+    '--bg': 'oklch(0.17 0.006 250)', '--surface': 'oklch(0.23 0.007 250)', '--surface-2': 'oklch(0.30 0.008 250)',
+    '--surface-sunken': 'oklch(0.13 0.006 250)', '--border': 'oklch(0.30 0.008 250)', '--border-strong': 'oklch(0.40 0.008 250)',
+    '--text': 'oklch(0.97 0.003 95)', '--text-muted': 'oklch(0.72 0.008 95)',
+  };
+
+  darkShared = {
+    '--text-faint': 'oklch(0.58 0.015 55)',
+    '--text-on-accent': 'oklch(0.30 0.09 42)',
+    '--n-800': 'oklch(0.90 0.015 55)',
+    '--copper-200': 'oklch(0.86 0.05 55)', '--copper-500': 'oklch(0.72 0.09 55)',
+    '--accent': 'oklch(0.88 0.045 55)', '--accent-soft': 'oklch(0.42 0.10 45)', '--accent-on-soft': 'oklch(0.90 0.05 55)',
+    '--success-soft': 'oklch(0.28 0.05 150)', '--success-on-soft': 'oklch(0.72 0.09 150)',
+    '--error': 'oklch(0.72 0.13 25)', '--error-soft': 'oklch(0.30 0.06 25)', '--error-on-soft': 'oklch(0.72 0.13 25)',
+    '--warning-soft': 'oklch(0.30 0.06 85)', '--warning-on-soft': 'oklch(0.80 0.10 85)',
+    '--debit': 'oklch(0.95 0.004 95)', '--credit': 'oklch(0.88 0.045 55)',
+    '--shadow-lg': '0 8px 24px oklch(0 0 0 / 0.4)',
+  };
+
+  tokens = {
+    light: {
+      '--bg': 'oklch(0.98 0.003 95)', '--surface': 'oklch(1 0 0)', '--surface-2': 'oklch(0.95 0.004 95)',
+      '--surface-sunken': 'oklch(0.95 0.004 95)', '--border': 'oklch(0.90 0.005 95)', '--border-strong': 'oklch(0.82 0.006 95)',
+      '--text': 'oklch(0.155 0.006 250)', '--text-muted': 'oklch(0.40 0.008 250)', '--text-faint': 'oklch(0.52 0.008 95)',
+      '--text-on-accent': 'oklch(1 0 0)',
+      '--n-200': 'oklch(0.90 0.005 95)', '--n-700': 'oklch(0.30 0.008 250)', '--n-800': 'oklch(0.22 0.007 250)',
+      '--copper-200': 'oklch(0.86 0.05 55)', '--copper-500': 'oklch(0.58 0.13 45)',
+      '--accent': 'oklch(0.58 0.13 45)', '--accent-soft': 'oklch(0.86 0.05 55)', '--accent-on-soft': 'oklch(0.38 0.10 40)',
+      '--success-soft': 'oklch(0.94 0.03 150)', '--success-on-soft': 'oklch(0.46 0.12 150)',
+      '--error': 'oklch(0.58 0.17 25)', '--error-soft': 'oklch(0.95 0.03 25)', '--error-on-soft': 'oklch(0.48 0.16 25)',
+      '--warning-soft': 'oklch(0.94 0.04 85)', '--warning-on-soft': 'oklch(0.48 0.12 80)',
+      '--debit': 'oklch(0.155 0.006 250)', '--credit': 'oklch(0.48 0.12 42)',
+      '--shadow-lg': '0 8px 24px oklch(0 0 0 / 0.14)',
+    },
+  };
+
+  getDarkTokens() {
+    const v = this.darkAnthracite;
+    return { ...this.darkShared, ...v, '--n-200': v['--border'], '--n-700': v['--text-muted'] };
+  }
+
+  common = {
+    '--font-sans': "Helvetica, Arial, sans-serif",
+    '--font-mono': "'SFMono-Regular', Consolas, monospace",
+  };
+
+  roles = [
+    { key: 'ADMIN', label: 'ADMIN', bg: 'oklch(0.86 0.05 55)', fg: 'oklch(0.38 0.10 40)', border: 'oklch(0.72 0.09 55)' },
+    { key: 'COMPTABLE', label: 'COMPTABLE', bg: 'oklch(0.94 0.03 150)', fg: 'oklch(0.46 0.12 150)', border: 'oklch(0.72 0.09 150)' },
+    { key: 'RH', label: 'RH', bg: 'oklch(0.94 0.04 300)', fg: 'oklch(0.46 0.12 300)', border: 'oklch(0.72 0.09 300)' },
+    { key: 'ACHATS', label: 'ACHATS', bg: 'oklch(0.94 0.04 85)', fg: 'oklch(0.55 0.12 80)', border: 'oklch(0.72 0.09 85)' },
+    { key: 'CAISSIER', label: 'CAISSIER', bg: 'oklch(0.94 0.03 220)', fg: 'oklch(0.46 0.10 220)', border: 'oklch(0.72 0.08 220)' },
+    { key: 'LECTURE_SEULE', label: 'LECTURE SEULE', bg: 'oklch(0.92 0.003 95)', fg: 'oklch(0.40 0.008 250)', border: 'oklch(0.82 0.006 95)' },
+  ];
+
+  navByRole = {
+    ADMIN: ['Tableau de bord', 'Utilisateurs', 'Entreprise', 'Journal', 'Paramètres'],
+    COMPTABLE: ['Tableau de bord', 'Journal', 'Grand livre', 'Balance'],
+    RH: ['Tableau de bord', 'Employés', 'Congés'],
+    ACHATS: ['Tableau de bord', 'Commandes', 'Fournisseurs'],
+    CAISSIER: ['Tableau de bord', 'Caisse du jour'],
+    LECTURE_SEULE: ['Tableau de bord', 'États financiers'],
+  };
+
+  userStepLabels = ['Informations', 'Rôle', 'Confirmation'];
+
+  users = [
+    { name: 'Aline Mbala', email: 'aline.mbala@walsia.cd', role: 'ADMIN', active: true },
+    { name: 'Joel Kanku', email: 'joel.kanku@walsia.cd', role: 'COMPTABLE', active: true },
+    { name: 'Grace Ilunga', email: 'grace.ilunga@walsia.cd', role: 'RH', active: false },
+    { name: 'Patrick Mwamba', email: 'patrick.mwamba@walsia.cd', role: 'ACHATS', active: true },
+    { name: 'Sarah Tshimanga', email: 'sarah.t@walsia.cd', role: 'CAISSIER', active: true },
+    { name: 'David Kalonji', email: 'david.k@walsia.cd', role: 'LECTURE_SEULE', active: false },
+  ];
+
+  rows = [
+    { date: '12/07', libelle: 'Vente marchandises — Client Kivu SARL', debit: 450000, credit: 0, status: 'Validée' },
+    { date: '11/07', libelle: 'Achat fournitures bureau', debit: 0, credit: 87340.5, status: 'Payée' },
+    { date: '10/07', libelle: 'Règlement facture fournisseur BTP', debit: 320000, credit: 320000, status: 'Brouillon' },
+    { date: '09/07', libelle: 'Salaires — juin 2026', debit: 1250000, credit: 0, status: 'Validée' },
+    { date: '08/07', libelle: 'Encaissement client Sarl Nzuri', debit: 0, credit: 210500, status: 'Rejetée' },
+  ];
+
+  fmt(n) { return n === 0 ? '—' : n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+  statusColors(status) {
+    const map = {
+      'Brouillon': ['var(--n-200)', 'var(--n-700)'],
+      'Validée': ['var(--success-soft)', 'var(--success-on-soft)'],
+      'Payée': ['var(--accent-soft)', 'var(--accent-on-soft)'],
+      'Rejetée': ['var(--error-soft)', 'var(--error-on-soft)'],
+    };
+    return map[status] || map['Brouillon'];
+  }
+
+  renderVals() {
+    const theme = this.state.theme;
+    const rootVars = { ...this.common, ...(theme === 'dark' ? this.getDarkTokens() : this.tokens.light) };
+
+    const colorSwatches = [
+      { name: 'Anthracite', token: '--n-800', value: rootVars['--n-800'] },
+      { name: 'Cuivre / accent', token: '--accent', value: rootVars['--accent'] },
+      { name: 'Fond', token: '--bg', value: rootVars['--bg'] },
+      { name: 'Surface', token: '--surface', value: rootVars['--surface'] },
+      { name: 'Bordure', token: '--border', value: rootVars['--border'] },
+      { name: 'Succès', token: '--success-on-soft', value: rootVars['--success-on-soft'] },
+      { name: 'Erreur', token: '--error', value: rootVars['--error'] },
+      { name: 'Avertissement', token: '--warning-on-soft', value: rootVars['--warning-on-soft'] },
+    ];
+
+    const sortedRows = [...this.rows].sort((a, b) => {
+      const k = this.state.sortKey;
+      const dir = this.state.sortDir === 'asc' ? 1 : -1;
+      if (a[k] < b[k]) return -1 * dir;
+      if (a[k] > b[k]) return 1 * dir;
+      return 0;
+    }).map(r => {
+      const [statusBg, statusFg] = this.statusColors(r.status);
+      return { ...r, debitFmt: this.fmt(r.debit), creditFmt: this.fmt(r.credit), statusBg, statusFg };
+    });
+
+    const sortArrow = {};
+    ['date', 'libelle', 'debit', 'credit'].forEach(k => {
+      sortArrow[k] = this.state.sortKey === k ? (this.state.sortDir === 'asc' ? '↑' : '↓') : '';
+    });
+
+    const activeRoleObj = this.roles.find(r => r.key === this.state.activeRole);
+    const navItemsForRole = this.navByRole[this.state.activeRole].map((label, i) => ({ label, active: i === 0 }));
+
+    const cur = this.state.onboardingStep;
+    const steps = this.stepLabels.map((label, i) => {
+      const n = i + 1;
+      const done = n < cur, active = n === cur;
+      return {
+        label,
+        hasLine: n < this.stepLabels.length,
+        markContent: done ? '✓' : String(n),
+        circleBg: done || active ? 'var(--accent)' : 'var(--surface-2)',
+        circleFg: done || active ? 'var(--text-on-accent)' : 'var(--text-muted)',
+        circleBorder: done || active ? '2px solid var(--accent)' : '2px solid var(--border-strong)',
+        labelColor: active ? 'var(--accent)' : done ? 'var(--text)' : 'var(--text-muted)',
+        lineColor: done ? 'var(--accent)' : 'var(--border-strong)',
+      };
+    });
+
+    return {
+      rootVars,
+      logoLetterColor: theme === 'light' ? 'var(--copper-200)' : '#000000',
+      steps,
+      stepIs1: cur === 1,
+      stepIs2: cur === 2,
+      stepIs3: cur === 3,
+      prevStep: () => this.setState(s => ({ onboardingStep: Math.max(1, s.onboardingStep - 1) })),
+      nextStep: () => this.setState(s => ({ onboardingStep: Math.min(3, s.onboardingStep + 1) })),
+      nextBtnLabel: cur === 3 ? 'Créer l\'entreprise' : 'Suivant',
+      prevBtnStyle: {
+        height: 38, padding: '0 20px', borderRadius: 6, fontWeight: 600, fontSize: 14, cursor: cur === 1 ? 'not-allowed' : 'pointer',
+        border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)',
+        opacity: cur === 1 ? 0.4 : 1,
+      },
+      theme,
+      themeLabel: theme === 'light' ? '☀ Clair' : '● Sombre',
+      toggleTheme: () => this.setState(s => ({ theme: s.theme === 'light' ? 'dark' : 'light' })),
+      colorSwatches,
+      roles: this.roles,
+      sortArrow,
+      sortedRows,
+      sortByDate: () => this.setState(s => ({ sortKey: 'date', sortDir: s.sortKey === 'date' && s.sortDir === 'asc' ? 'desc' : 'asc' })),
+      sortByLibelle: () => this.setState(s => ({ sortKey: 'libelle', sortDir: s.sortKey === 'libelle' && s.sortDir === 'asc' ? 'desc' : 'asc' })),
+      sortByDebit: () => this.setState(s => ({ sortKey: 'debit', sortDir: s.sortKey === 'debit' && s.sortDir === 'asc' ? 'desc' : 'asc' })),
+      sortByCredit: () => this.setState(s => ({ sortKey: 'credit', sortDir: s.sortKey === 'credit' && s.sortDir === 'asc' ? 'desc' : 'asc' })),
+      kpis: [
+        { label: 'Solde de trésorerie', value: '4 812 300', trend: '+3,2% vs mois dernier', trendColor: 'var(--success-on-soft)' },
+        { label: 'Créances clients', value: '1 204 500', trend: '−1,1% vs mois dernier', trendColor: 'var(--error-on-soft)' },
+        { label: 'Écritures en attente', value: '12', trend: 'à valider avant clôture', trendColor: 'var(--warning-on-soft)' },
+      ],
+      activeRole: this.state.activeRole,
+      activeRoleLabel: activeRoleObj ? activeRoleObj.label : '',
+      roleButtons: this.roles.map(r => {
+        const active = r.key === this.state.activeRole;
+        return {
+          ...r,
+          onClick: () => this.setState({ activeRole: r.key }),
+          style: {
+            padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            border: active ? '1px solid var(--accent)' : '1px solid var(--border-strong)',
+            background: active ? 'var(--accent-soft)' : 'var(--surface)',
+            color: active ? 'var(--accent-on-soft)' : 'var(--text)',
+          },
+        };
+      }),
+      navItemsForRole,
+      modalOpen: this.state.modalOpen,
+      openModal: () => this.setState({ modalOpen: true, userStep: 1 }),
+      closeModal: () => this.setState({ modalOpen: false }),
+      ...this.userStepperVals(),
+      ...this.searchSortVals(),
+    };
+  }
+
+  userStepperVals() {
+    const cur = this.state.userStep;
+    const userSteps = this.userStepLabels.map((label, i) => {
+      const n = i + 1;
+      const done = n < cur, active = n === cur;
+      return {
+        label,
+        hasLine: n < this.userStepLabels.length,
+        markContent: done ? '✓' : String(n),
+        circleBg: done || active ? 'var(--accent)' : 'var(--surface-2)',
+        circleFg: done || active ? 'var(--text-on-accent)' : 'var(--text-muted)',
+        circleBorder: done || active ? '2px solid var(--accent)' : '2px solid var(--border-strong)',
+        labelColor: active ? 'var(--accent)' : done ? 'var(--text)' : 'var(--text-muted)',
+        lineColor: done ? 'var(--accent)' : 'var(--border-strong)',
+      };
+    });
+    return {
+      userSteps,
+      userStepIs1: cur === 1,
+      userStepIs2: cur === 2,
+      userStepIs3: cur === 3,
+      userPrevBtnLabel: cur === 1 ? 'Annuler' : 'Précédent',
+      userPrevOrClose: cur === 1
+        ? () => this.setState({ modalOpen: false })
+        : () => this.setState(s => ({ userStep: s.userStep - 1 })),
+      userPrevBtnStyle: {
+        height: 36, padding: '0 16px', borderRadius: 6, fontWeight: 600, fontSize: 13, cursor: 'pointer',
+        border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)',
+      },
+      userNextBtnLabel: cur === 3 ? 'Créer l\'utilisateur' : 'Suivant',
+      userNextOrCreate: cur === 3
+        ? () => this.setState({ modalOpen: false })
+        : () => this.setState(s => ({ userStep: s.userStep + 1 })),
+    };
+  }
+
+  roleColors(role) {
+    const map = {
+      ADMIN: ['oklch(0.86 0.05 55)', 'oklch(0.38 0.10 40)', 'oklch(0.72 0.09 55)'],
+      COMPTABLE: ['oklch(0.94 0.03 150)', 'oklch(0.46 0.12 150)', 'oklch(0.72 0.09 150)'],
+      RH: ['oklch(0.94 0.04 300)', 'oklch(0.46 0.12 300)', 'oklch(0.72 0.09 300)'],
+      ACHATS: ['oklch(0.94 0.04 85)', 'oklch(0.55 0.12 80)', 'oklch(0.72 0.09 85)'],
+      CAISSIER: ['oklch(0.94 0.03 220)', 'oklch(0.46 0.10 220)', 'oklch(0.72 0.08 220)'],
+      LECTURE_SEULE: ['oklch(0.92 0.003 95)', 'oklch(0.40 0.008 250)', 'oklch(0.82 0.006 95)'],
+    };
+    return map[role] || map.LECTURE_SEULE;
+  }
+
+  searchSortVals() {
+    const q = this.state.searchQuery.trim().toLowerCase();
+    const filter = this.state.roleFilter;
+    let list = this.users.filter(u =>
+      (filter === 'Tous' || u.role === filter) &&
+      (q === '' || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
+    );
+    const k = this.state.userSortKey, dir = this.state.userSortDir === 'asc' ? 1 : -1;
+    list = [...list].sort((a, b) => a[k] < b[k] ? -1 * dir : a[k] > b[k] ? 1 * dir : 0);
+    const filteredUsers = list.map(u => {
+      const [roleBg, roleFg, roleBorder] = this.roleColors(u.role);
+      return { ...u, roleBg, roleFg, roleBorder, activeColor: u.active ? 'var(--success-on-soft)' : 'var(--text-faint)' };
+    });
+
+    const roleOptions = ['Tous', ...this.roles.map(r => r.key)];
+    const roleFilterChips = roleOptions.map(key => {
+      const active = key === filter;
+      return {
+        key,
+        label: key === 'Tous' ? 'Tous' : key,
+        onClick: () => this.setState({ roleFilter: key }),
+        style: {
+          padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          border: active ? '1px solid var(--accent)' : '1px solid var(--border-strong)',
+          background: active ? 'var(--accent-soft)' : 'var(--surface)',
+          color: active ? 'var(--accent-on-soft)' : 'var(--text)',
+        },
+      };
+    });
+
+    const userSortArrow = {};
+    ['name', 'email'].forEach(key => {
+      userSortArrow[key] = this.state.userSortKey === key ? (this.state.userSortDir === 'asc' ? '↑' : '↓') : '';
+    });
+
+    return {
+      searchQuery: this.state.searchQuery,
+      onSearchChange: (e) => this.setState({ searchQuery: e.target.value }),
+      roleFilterChips,
+      userSortArrow,
+      userSortByName: () => this.setState(s => ({ userSortKey: 'name', userSortDir: s.userSortKey === 'name' && s.userSortDir === 'asc' ? 'desc' : 'asc' })),
+      userSortByEmail: () => this.setState(s => ({ userSortKey: 'email', userSortDir: s.userSortKey === 'email' && s.userSortDir === 'asc' ? 'desc' : 'asc' })),
+      filteredUsers,
+      noResults: filteredUsers.length === 0,
+      resultsCountLabel: `${filteredUsers.length} sur ${this.users.length} utilisateurs`,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<div class="auth-shell">
+  @if (resultat()) {
+    <app-success-card
+      title="Utilisateur créé"
+      message="Le mot de passe temporaire et le lien de vérification ont été envoyés par email."
+    >
+      <button type="button" class="btn btn-secondary" (click)="ajouterAutre()">Ajouter un autre</button>
+      <a routerLink="/admin/utilisateurs" class="btn btn-primary">Voir la liste</a>
+    </app-success-card>
+  } @else {
+    <div class="auth-card">
+      <a routerLink="/admin/utilisateurs" class="retour">&larr; Utilisateurs</a>
+
+      <h1 class="page-title">Ajouter un utilisateur</h1>
+      <p class="page-intro">
+        Un mot de passe temporaire et un email de vérification seront envoyés à l'adresse indiquée.
+      </p>
+
+      <app-stepper [labels]="etapeLabels" [currentStep]="etapeCourante()" />
+
+      <form [formGroup]="form" (ngSubmit)="etapeSuivante()" class="formulaire">
+        @if (etapeCourante() === 1) {
+          <label>
+            Nom
+            <input type="text" formControlName="nom" [class.champ-invalide]="form.controls.nom.invalid && form.controls.nom.touched" />
+            @if (form.controls.nom.invalid && form.controls.nom.touched) {
+              <span class="champ-erreur">Nom requis.</span>
+            }
+          </label>
+
+          <label>
+            Post-nom
+            <input type="text" formControlName="postNom" />
+          </label>
+
+          <label>
+            Prénom
+            <input type="text" formControlName="prenom" [class.champ-invalide]="form.controls.prenom.invalid && form.controls.prenom.touched" />
+            @if (form.controls.prenom.invalid && form.controls.prenom.touched) {
+              <span class="champ-erreur">Prénom requis.</span>
+            }
+          </label>
+
+          <label>
+            Poste
+            <input type="text" formControlName="poste" placeholder="ex. Comptable principal" />
+          </label>
+
+          <label>
+            Email
+            <input type="email" formControlName="email" [class.champ-invalide]="form.controls.email.invalid && form.controls.email.touched" />
+            @if (form.controls.email.invalid && form.controls.email.touched) {
+              <span class="champ-erreur">Email valide requis.</span>
+            }
+          </label>
+        }
+
+        @if (etapeCourante() === 2) {
+          <label>
+            Rôle
+            <select formControlName="role">
+              @for (r of roles; track r) {
+                <option [value]="r">{{ r }}</option>
+              }
+            </select>
+          </label>
+          <p class="page-intro">Le rôle détermine la navigation et les permissions accordées.</p>
+        }
+
+        @if (etapeCourante() === 3) {
+          <div class="card">
+            <p><strong>Nom</strong>{{ form.controls.nom.value }} {{ form.controls.postNom.value }} {{ form.controls.prenom.value }}</p>
+            <p><strong>Poste</strong>{{ form.controls.poste.value || '—' }}</p>
+            <p><strong>Email</strong>{{ form.controls.email.value }}</p>
+            <p><strong>Rôle</strong>{{ form.controls.role.value }}</p>
+          </div>
+        }
+
+        @if (erreur()) {
+          <app-alert type="error">{{ erreur() }}</app-alert>
+        }
+
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" [disabled]="etapeCourante() === 1" (click)="etapePrecedente()">
+            Précédent
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="enCours()">
+            @if (etapeCourante() < etapeLabels.length) {
+              Suivant
+            } @else {
+              {{ enCours() ? 'Création en cours...' : 'Créer l\'utilisateur' }}
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</div>
