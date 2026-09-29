@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body{margin:0;background:#e9e7e3;font-family:Helvetica,Arial,sans-serif;}
+    *{box-sizing:border-box;}
+    input:focus,select:focus{outline:none;border-color:#b5652e !important;box-shadow:0 0 0 3px rgba(181,101,46,0.15);}
+    a{color:#b5652e;} a:hover{color:#8a4f24;}
+  </style>
+</helmet>
+
+<section style="padding:40px;display:flex;flex-direction:column;gap:16px;">
+  <div style="font-size:13px;font-weight:700;color:#666;letter-spacing:0.04em;">COMPTABILITÉ (§I) — Grand livre · lecture seule</div>
+
+  <div style="width:1200px;background:#faf9f7;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;border:1px solid #e5e2dd;">
+    <div style="padding:28px 32px 32px;">
+
+      <div style="font-size:13px;color:#8a8580;margin-bottom:6px;"><a href="./Comptano - Tableau de bord Comptabilite.dc.html">Comptabilité</a> / Grand livre</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;">
+        <div>
+          <div style="font-size:22px;font-weight:800;color:#1c1e22;">Grand livre</div>
+          <div style="font-size:13px;color:#8a8580;margin-top:3px;">Mouvements par compte, solde progressif.</div>
+        </div>
+        <select value="{{ periode }}" onChange="{{ onPeriode }}" style="height:42px;padding:0 14px;border-radius:9px;border:1px solid #d6d2cc;font-size:14px;color:#1c1e22;background:#fff;">
+          <option value="2026">Exercice 2026 (ouvert)</option>
+          <option value="2025">Exercice 2025 (clôturé)</option>
+          <option value="2024">Exercice 2024 (clôturé)</option>
+        </select>
+      </div>
+
+      <div style="display:flex;gap:16px;">
+        <!-- rail classes → comptes -->
+        <div style="width:280px;flex-shrink:0;display:flex;flex-direction:column;background:#fff;border:1px solid #e5e2dd;border-radius:12px;overflow:hidden;">
+          <div style="padding:12px;border-bottom:1px solid #efece7;">
+            <input type="text" value="{{ rq }}" onInput="{{ onRq }}" placeholder="Compte (n° ou libellé)…" style="width:100%;height:38px;padding:0 12px;border-radius:8px;border:1px solid #d6d2cc;font-size:13px;color:#1c1e22;"></input>
+          </div>
+          <div style="overflow:auto;max-height:560px;">
+            <sc-for list="{{ classGroups }}" as="g" hint-placeholder-count="4">
+              <div style="padding:9px 12px 4px;font-size:11px;font-weight:700;color:#8a8580;text-transform:uppercase;letter-spacing:0.04em;background:#faf9f7;">Classe {{ g.numero }} — {{ g.titre }}</div>
+              <sc-for list="{{ g.comptes }}" as="c" hint-placeholder-count="2">
+                <div onClick="{{ c.onSelect }}" style="{{ c.style }}">
+                  <span style="font-size:13px;font-weight:800;color:#1c1e22;font-variant-numeric:tabular-nums;width:52px;flex-shrink:0;">{{ c.numero }}</span>
+                  <span style="flex:1;font-size:13px;color:#1c1e22;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.libelle }}</span>
+                </div>
+              </sc-for>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- mouvements -->
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:#fff;border:1px solid #e5e2dd;border-radius:12px;overflow:hidden;">
+          <div style="padding:16px 20px;border-bottom:1px solid #efece7;">
+            <div style="font-size:15px;font-weight:800;color:#1c1e22;"><span style="color:#8a4f24;">{{ selNumero }}</span> — {{ selLibelle }}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:100px 1.6fr 140px 130px 130px 140px;background:#f3f1ee;padding:0 20px;">
+            <div style="height:40px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Date</div>
+            <div style="height:40px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Libellé</div>
+            <div style="height:40px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Réf. écriture</div>
+            <div style="height:40px;display:flex;align-items:center;justify-content:flex-end;font-size:12px;font-weight:700;color:#666;">Débit</div>
+            <div style="height:40px;display:flex;align-items:center;justify-content:flex-end;font-size:12px;font-weight:700;color:#666;">Crédit</div>
+            <div style="height:40px;display:flex;align-items:center;justify-content:flex-end;font-size:12px;font-weight:700;color:#666;">Solde</div>
+          </div>
+          <div style="display:grid;grid-template-columns:100px 1.6fr 140px 130px 130px 140px;padding:10px 20px;border-bottom:1px solid #f0eeea;align-items:center;background:#faf9f7;">
+            <div style="font-size:12px;color:#8a8580;">—</div>
+            <div style="font-size:13px;font-weight:700;color:#666;font-style:italic;">Solde d'ouverture</div>
+            <div></div><div></div><div></div>
+            <div style="font-size:13px;font-weight:700;color:#1c1e22;text-align:right;font-variant-numeric:tabular-nums;">{{ soldeOuverture }}</div>
+          </div>
+          <sc-for list="{{ mouvements }}" as="m" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:100px 1.6fr 140px 130px 130px 140px;padding:10px 20px;border-bottom:1px solid #f0eeea;align-items:center;">
+              <div style="font-size:13px;color:#1c1e22;">{{ m.date }}</div>
+              <div style="font-size:13px;color:#1c1e22;">{{ m.libelle }}</div>
+              <div style="font-size:12px;color:#8a8580;">{{ m.reference }}</div>
+              <div style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;color:var(--debit,#28241f);">{{ m.debit }}</div>
+              <div style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;color:var(--credit,#a8672a);">{{ m.credit }}</div>
+              <div style="font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;text-align:right;color:#1c1e22;">{{ m.solde }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.classes = [
+      { numero: 4, titre: 'Comptes de tiers', comptes: [
+        { numero:'401', libelle:'Fournisseurs, dettes en compte' },
+        { numero:'411', libelle:'Clients' },
+      ]},
+      { numero: 5, titre: 'Comptes de trésorerie', comptes: [
+        { numero:'521', libelle:'Banques locales' },
+        { numero:'571', libelle:'Caisse siège social' },
+      ]},
+      { numero: 6, titre: 'Charges des activités ordinaires', comptes: [
+        { numero:'601', libelle:'Achats de marchandises' },
+        { numero:'62', libelle:'Services extérieurs A' },
+      ]},
+      { numero: 7, titre: 'Produits des activités ordinaires', comptes: [
+        { numero:'701', libelle:'Ventes de marchandises' },
+      ]},
+    ];
+    this.mvts = {
+      '401': { ouverture: 0, sens0: 'CREDIT', lines: [
+        { date:'03/09/2026', libelle:'Achat fournitures bureau', reference:'RG-2231', debit:0, credit:85000 },
+        { date:'04/09/2026', libelle:'Règlement facture n°2231', reference:'RG-2231', debit:450000, credit:0 },
+      ]},
+      '521': { ouverture: 2400000, sens0: 'DEBIT', lines: [
+        { date:'04/09/2026', libelle:'Virement — règlement fournisseur', reference:'RG-2231', debit:0, credit:450000 },
+        { date:'15/08/2026', libelle:'Encaissement client', reference:'FV-1180', debit:610000, credit:0 },
+      ]},
+    };
+    this.state = { periode:'2026', rq:'', selNumero: '401' };
+  }
+  fmt(n){ return n===0 ? '—' : n.toLocaleString('fr-FR'); }
+
+  renderVals(){
+    const s = this.state;
+    const q = s.rq.trim().toLowerCase();
+    const classGroups = this.classes.map(g => ({
+      ...g,
+      comptes: g.comptes.filter(c => q==='' || `${c.numero} ${c.libelle}`.toLowerCase().includes(q)).map(c => {
+        const sel = c.numero === s.selNumero;
+        return {
+          ...c, onSelect: () => this.setState({ selNumero: c.numero }),
+          style: { display:'flex', alignItems:'center', gap:8, padding:'8px 12px', cursor:'pointer', background: sel ? '#faf3ec' : '#fff', borderLeft: sel ? '3px solid #b5652e' : '3px solid transparent' },
+        };
+      }),
+    })).filter(g => g.comptes.length > 0);
+
+    const allComptes = this.classes.flatMap(g => g.comptes);
+    const sel = allComptes.find(c => c.numero === s.selNumero) || allComptes[0];
+    const m = this.mvts[sel.numero] || { ouverture: 0, sens0: 'DEBIT', lines: [] };
+    let solde = m.ouverture * (m.sens0 === 'DEBIT' ? 1 : -1);
+    const mouvements = m.lines.map(l => {
+      solde += l.debit - l.credit;
+      return { ...l, debit: this.fmt(l.debit), credit: this.fmt(l.credit), solde: `${solde >= 0 ? '' : '-'}${this.fmt(Math.abs(solde))}` };
+    });
+
+    return {
+      periode: s.periode, onPeriode: e => this.setState({ periode: e.target.value }),
+      rq: s.rq, onRq: e => this.setState({ rq: e.target.value }),
+      classGroups,
+      selNumero: sel.numero, selLibelle: sel.libelle,
+      soldeOuverture: `${m.sens0 === 'CREDIT' ? '-' : ''}${this.fmt(m.ouverture)}`,
+      mouvements,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body{margin:0;background:#e9e7e3;font-family:Helvetica,Arial,sans-serif;}
+    *{box-sizing:border-box;}
+    input:focus,select:focus{outline:none;border-color:#b5652e !important;box-shadow:0 0 0 3px rgba(181,101,46,0.15);}
+    a{color:#b5652e;} a:hover{color:#8a4f24;}
+    @keyframes popIn{from{opacity:0;transform:translateY(10px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  </style>
+</helmet>
+
+<section style="padding:40px;display:flex;flex-direction:column;gap:16px;">
+  <div style="font-size:13px;font-weight:700;color:#666;letter-spacing:0.04em;">COMPTABILITÉ (§F) — Liste des écritures + détail</div>
+
+  <div style="width:1200px;background:#faf9f7;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;border:1px solid #e5e2dd;position:relative;">
+    <div style="padding:28px 32px 32px;">
+
+      <div style="font-size:13px;color:#8a8580;margin-bottom:6px;"><a href="./Comptano - Tableau de bord Comptabilite.dc.html">Comptabilité</a> / Écritures</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;">
+        <div>
+          <div style="font-size:22px;font-weight:800;color:#1c1e22;">Journal général</div>
+          <div style="font-size:13px;color:#8a8580;margin-top:3px;">Exercice 01/01 – 31/12/2026 (ouvert).</div>
+        </div>
+        <a href="./Comptano - Saisie Ecriture.dc.html" style="height:42px;padding:0 18px;border-radius:9px;border:none;background:#a1521f;color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;text-decoration:none;">+ Nouvelle écriture</a>
+      </div>
+
+      <div style="background:#fff;border:1px solid #e5e2dd;border-radius:14px;overflow:hidden;">
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:16px 20px;border-bottom:1px solid #efece7;">
+          <input type="text" value="{{ q }}" onInput="{{ onSearch }}" placeholder="Rechercher libellé, référence pièce…" style="flex:1;min-width:260px;height:42px;padding:0 14px;border-radius:9px;border:1px solid #d6d2cc;font-size:14px;color:#1c1e22;"></input>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 20px;border-bottom:1px solid #efece7;">
+          <sc-for list="{{ statutChips }}" as="c" hint-placeholder-count="5"><button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:110px 1fr 1.4fr 150px 130px 90px;background:#f3f1ee;padding:0 20px;">
+          <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Date</div>
+          <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Journal</div>
+          <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Référence / libellé</div>
+          <div style="height:44px;display:flex;align-items:center;justify-content:flex-end;font-size:12px;font-weight:700;color:#666;">Montant total</div>
+          <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Statut</div>
+          <div style="height:44px;"></div>
+        </div>
+        <sc-for list="{{ visible }}" as="e" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:110px 1fr 1.4fr 150px 130px 90px;padding:0 20px;border-bottom:1px solid #f0eeea;align-items:center;min-height:58px;">
+            <div style="font-size:13px;color:#1c1e22;">{{ e.date }}</div>
+            <div style="font-size:13px;color:#666;">Journal général</div>
+            <div style="display:flex;flex-direction:column;gap:2px;padding-right:12px;"><span style="font-size:14px;font-weight:700;color:#1c1e22;">{{ e.libelle }}</span><span style="font-size:12px;color:#8a8580;">{{ e.reference }}</span></div>
+            <div style="font-size:14px;font-weight:700;color:#1c1e22;text-align:right;font-variant-numeric:tabular-nums;">{{ e.montant }}</div>
+            <div><span style="{{ e.statutBadge }}">{{ e.statutLabel }}</span></div>
+            <div><a onClick="{{ e.onView }}" style="font-size:13px;font-weight:700;cursor:pointer;">Détail →</a></div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noResults }}"><div style="padding:44px;text-align:center;font-size:14px;color:#888;">Aucune écriture ne correspond.</div></sc-if>
+      </div>
+    </div>
+
+    <!-- ============ MODALE : DÉTAIL D'UNE ÉCRITURE ============ -->
+    <sc-if value="{{ detailOpen }}">
+      <div style="position:absolute;inset:0;background:rgba(20,20,22,0.5);display:flex;align-items:center;justify-content:center;padding:32px;animation:fadeIn .15s ease;z-index:20;">
+        <div style="width:760px;max-height:100%;background:#faf9f7;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,0.35);overflow:auto;animation:popIn .25s cubic-bezier(0.16,1,0.3,1);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 26px;border-bottom:1px solid #e5e2dd;">
+            <div>
+              <div style="font-size:17px;font-weight:800;color:#1c1e22;">{{ dLibelle }}</div>
+              <div style="font-size:12px;color:#8a8580;margin-top:2px;">{{ dReference }} · {{ dDate }}</div>
+            </div>
+            <button onClick="{{ closeDetail }}" style="width:34px;height:34px;border-radius:9px;border:1px solid #e5e2dd;background:#fff;color:#8a8580;font-size:16px;cursor:pointer;">✕</button>
+          </div>
+
+          <div style="padding:22px 26px;display:flex;flex-direction:column;gap:18px;">
+            <div><span style="{{ dStatutBadge }}">{{ dStatutLabel }}</span></div>
+
+            <div style="background:#fff;border:1px solid #e5e2dd;border-radius:12px;overflow:hidden;">
+              <div style="display:grid;grid-template-columns:1.5fr 110px 1fr 1.5fr;gap:12px;background:#f3f1ee;padding:0 16px;">
+                <div style="height:38px;display:flex;align-items:center;font-size:11px;font-weight:700;color:#666;">Compte</div>
+                <div style="height:38px;display:flex;align-items:center;font-size:11px;font-weight:700;color:#666;">Sens</div>
+                <div style="height:38px;display:flex;align-items:center;justify-content:flex-end;font-size:11px;font-weight:700;color:#666;">Montant</div>
+                <div style="height:38px;display:flex;align-items:center;font-size:11px;font-weight:700;color:#666;">Libellé</div>
+              </div>
+              <sc-for list="{{ dLines }}" as="l" hint-placeholder-count="2">
+                <div style="display:grid;grid-template-columns:1.5fr 110px 1fr 1.5fr;gap:12px;padding:10px 16px;border-bottom:1px solid #f0eeea;align-items:center;">
+                  <div style="font-size:13px;color:#1c1e22;"><b style="color:#8a4f24;">{{ l.numero }}</b> {{ l.libelleCompte }}</div>
+                  <div><span style="{{ l.sensStyle }}">{{ l.sensLabel }}</span></div>
+                  <div style="font-size:13px;font-weight:700;color:#1c1e22;text-align:right;font-variant-numeric:tabular-nums;">{{ l.montant }}</div>
+                  <div style="font-size:13px;color:#666;">{{ l.libelle }}</div>
+                </div>
+              </sc-for>
+              <div style="display:flex;align-items:center;justify-content:flex-end;gap:16px;padding:10px 16px;background:#faf9f7;">
+                <span style="font-size:12px;color:#666;">Σ Débits <b style="color:#1c1e22;">{{ dTotalDebit }}</b></span>
+                <span style="font-size:12px;color:#666;">Σ Crédits <b style="color:#1c1e22;">{{ dTotalCredit }}</b></span>
+                <span style="{{ dBalancePillStyle }}">Équilibrée</span>
+              </div>
+            </div>
+
+            <div style="background:#fff;border:1px solid #e5e2dd;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:12px;font-weight:700;color:#8a8580;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">Historique</div>
+              <div style="font-size:13px;color:#1c1e22;">Créée par <b>{{ dCreePar }}</b> le {{ dCreeLe }}</div>
+              <sc-if value="{{ dHasValidation }}"><div style="font-size:13px;color:#1c1e22;">Validée par <b>{{ dValidePar }}</b> le {{ dValideLe }}</div></sc-if>
+              <sc-if value="{{ dHasContrepassation }}"><div style="font-size:13px;color:#1c1e22;">Contre-passée par <b>{{ dContrePar }}</b> le {{ dContreLe }} — <a onClick="{{ closeDetail }}" style="cursor:pointer;">voir l'écriture miroir →</a></div></sc-if>
+            </div>
+
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+              <sc-if value="{{ dCanEdit }}"><button style="height:42px;padding:0 18px;border-radius:9px;border:1px solid #d6d2cc;background:#fff;color:#1c1e22;font-size:14px;font-weight:700;cursor:pointer;">Modifier</button></sc-if>
+              <sc-if value="{{ dCanValidate }}"><button style="height:42px;padding:0 18px;border-radius:9px;border:none;background:#1f9d55;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Valider</button></sc-if>
+              <sc-if value="{{ dCanContrepasser }}"><button style="height:42px;padding:0 18px;border-radius:9px;border:1px solid #d6d2cc;background:#fff;color:#1c1e22;font-size:14px;font-weight:700;cursor:pointer;">Contre-passer</button></sc-if>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  data = [
+    { id:'e1', date:'04/09/2026', libelle:'Règlement facture n°2231', reference:'RG-2231', montant:450000, statut:'VALIDEE', lines:[{numero:'401',libelleCompte:'Fournisseurs, dettes en compte',sens:'DEBIT',montant:450000,libelle:'Règlement'},{numero:'521',libelleCompte:'Banques locales',sens:'CREDIT',montant:450000,libelle:'Virement sortant'}], creePar:'Alice Mombeti', creeLe:'04/09/2026', validePar:'John Doe', valideLe:'04/09/2026' },
+    { id:'e2', date:'03/09/2026', libelle:'Achat fournitures bureau', reference:'Facture n°2231', montant:85000, statut:'ATTENTE', lines:[{numero:'62',libelleCompte:'Services extérieurs A',sens:'DEBIT',montant:85000,libelle:'Fournitures'},{numero:'401',libelleCompte:'Fournisseurs, dettes en compte',sens:'CREDIT',montant:85000,libelle:'Facture n°2231'}], creePar:'Alice Mombeti', creeLe:'03/09/2026' },
+    { id:'e3', date:'02/09/2026', libelle:'Salaire — Moïse Aganze', reference:'PAIE-08-2026', montant:320000, statut:'BROUILLON', lines:[{numero:'66',libelleCompte:'Charges de personnel',sens:'DEBIT',montant:320000,libelle:'Salaire août'},{numero:'422',libelleCompte:'Personnel, rémunérations dues',sens:'CREDIT',montant:320000,libelle:'Salaire août'}], creePar:'John Doe', creeLe:'02/09/2026' },
+    { id:'e4', date:'28/08/2026', libelle:'Vente marchandises — Kivu Trading', reference:'FV-1180', montant:610000, statut:'VALIDEE', lines:[{numero:'411',libelleCompte:'Clients',sens:'DEBIT',montant:610000,libelle:'Vente FV-1180'},{numero:'701',libelleCompte:'Ventes de marchandises',sens:'CREDIT',montant:610000,libelle:'Vente FV-1180'}], creePar:'Alice Mombeti', creeLe:'28/08/2026', validePar:'John Doe', valideLe:'29/08/2026' },
+    { id:'e5', date:'20/08/2026', libelle:'Écriture erronée — matériel', reference:'ERR-004', montant:150000, statut:'CONTREPASSEE', lines:[{numero:'24',libelleCompte:'Matériel et mobilier',sens:'DEBIT',montant:150000,libelle:'Achat matériel'},{numero:'521',libelleCompte:'Banques locales',sens:'CREDIT',montant:150000,libelle:'Paiement'}], creePar:'John Doe', creeLe:'20/08/2026', validePar:'John Doe', valideLe:'20/08/2026', contrePar:'John Doe', contreLe:'22/08/2026' },
+    { id:'e6', date:'15/08/2026', libelle:'Cotisations CNSS', reference:'CNSS-08', montant:96000, statut:'VALIDEE', lines:[{numero:'431',libelleCompte:'Sécurité sociale',sens:'DEBIT',montant:96000,libelle:'Cotisations'},{numero:'571',libelleCompte:'Caisse siège social',sens:'CREDIT',montant:96000,libelle:'Paiement caisse'}], creePar:'Alice Mombeti', creeLe:'15/08/2026', validePar:'John Doe', valideLe:'16/08/2026' },
+  ];
+  statutLabels = { BROUILLON:'Brouillon', ATTENTE:'En attente', VALIDEE:'Validée', CONTREPASSEE:'Contre-passée' };
+  statutOrder = ['BROUILLON','ATTENTE','VALIDEE','CONTREPASSEE'];
+  state = { q:'', statut:'Tous', detailOpen:false, detailId:null };
+
+  badge(statut){
+    const m = { BROUILLON:['#eeecea','#8a8580','#dcd8d2'], ATTENTE:['#f2ddc9','#8a4f24','#e2b98f'], VALIDEE:['#e6f4ea','#1f7a44','#b7e0c4'], CONTREPASSEE:['#ece4f5','#6b4a8f','#d7c7e8'] };
+    const c = m[statut];
+    return `display:inline-block;padding:3px 11px;border-radius:999px;font-size:12px;font-weight:700;background:${c[0]};color:${c[1]};border:1px solid ${c[2]};`;
+  }
+  chip(active){ return { padding:'7px 14px', borderRadius:999, fontSize:13, fontWeight:600, cursor:'pointer', border: active ? '1px solid #d09a5f' : '1px solid #d6d2cc', background: active ? '#f2ddc9' : '#fff', color: active ? '#8a4f24' : '#444' }; }
+  fmt(n){ return n.toLocaleString('fr-FR'); }
+
+  renderVals(){
+    const s = this.state;
+    const qq = s.q.trim().toLowerCase();
+    const list = this.data.filter(e => {
+      const okQ = qq==='' || `${e.libelle} ${e.reference}`.toLowerCase().includes(qq);
+      const okS = s.statut==='Tous' || e.statut===s.statut;
+      return okQ && okS;
+    });
+    const out = {
+      q: s.q, onSearch: ev => this.setState({ q: ev.target.value }),
+      statutChips: ['Tous', ...this.statutOrder].map(k => ({
+        label: k==='Tous' ? 'Tous' : this.statutLabels[k],
+        style: this.chip(s.statut===k), onClick: () => this.setState({ statut: k }),
+      })),
+      noResults: list.length===0,
+      visible: list.map(e => ({
+        ...e, montant: this.fmt(e.montant),
+        statutLabel: this.statutLabels[e.statut], statutBadge: this.badge(e.statut),
+        onView: () => this.setState({ detailOpen: true, detailId: e.id }),
+      })),
+    };
+
+    const d = this.data.find(x => x.id === s.detailId);
+    out.detailOpen = s.detailOpen;
+    out.closeDetail = () => this.setState({ detailOpen: false });
+    if (d) {
+      out.dLibelle = d.libelle; out.dReference = d.reference; out.dDate = d.date;
+      out.dStatutLabel = this.statutLabels[d.statut]; out.dStatutBadge = this.badge(d.statut);
+      out.dLines = d.lines.map(l => ({
+        ...l, montant: this.fmt(l.montant), sensLabel: l.sens==='DEBIT' ? 'Débit' : 'Crédit',
+        sensStyle: `display:inline-block;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700;background:${l.sens==='DEBIT' ? '#eee9e3' : '#f4e4d5'};color:${l.sens==='DEBIT' ? '#28241f' : '#a8672a'};`,
+      }));
+      out.dTotalDebit = this.fmt(d.lines.filter(l=>l.sens==='DEBIT').reduce((a,l)=>a+l.montant,0));
+      out.dTotalCredit = this.fmt(d.lines.filter(l=>l.sens==='CREDIT').reduce((a,l)=>a+l.montant,0));
+      out.dBalancePillStyle = 'display:inline-flex;align-items:center;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#e6f4ea;color:#1f7a44;border:1px solid #b7e0c4;';
+      out.dCreePar = d.creePar; out.dCreeLe = d.creeLe;
+      out.dHasValidation = !!d.validePar; out.dValidePar = d.validePar; out.dValideLe = d.valideLe;
+      out.dHasContrepassation = !!d.contrePar; out.dContrePar = d.contrePar; out.dContreLe = d.contreLe;
+      out.dCanEdit = d.statut === 'BROUILLON';
+      out.dCanValidate = d.statut === 'ATTENTE';
+      out.dCanContrepasser = d.statut === 'VALIDEE';
+    }
+    return out;
+  }
+}
+
+</script>
+</body>
+</html>

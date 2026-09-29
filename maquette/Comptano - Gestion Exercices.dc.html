@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body{margin:0;background:#e9e7e3;font-family:Helvetica,Arial,sans-serif;}
+    *{box-sizing:border-box;}
+    input:focus,select:focus{outline:none;border-color:#b5652e !important;box-shadow:0 0 0 3px rgba(181,101,46,0.15);}
+    a{color:#b5652e;} a:hover{color:#8a4f24;}
+    @keyframes popIn{from{opacity:0;transform:translateY(10px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  </style>
+</helmet>
+
+<section style="padding:40px;display:flex;flex-direction:column;gap:16px;">
+  <div style="font-size:13px;font-weight:700;color:#666;letter-spacing:0.04em;">COMPTABILITÉ (§D) — Gestion des exercices comptables</div>
+
+  <div style="width:1200px;background:#faf9f7;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;border:1px solid #e5e2dd;position:relative;">
+    <div style="padding:28px 32px 32px;">
+
+      <div style="font-size:13px;color:#8a8580;margin-bottom:6px;"><a href="./Comptano - Tableau de bord Comptabilite.dc.html">Comptabilité</a> / Exercices</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;">
+        <div>
+          <div style="font-size:22px;font-weight:800;color:#1c1e22;">Exercices comptables</div>
+          <div style="font-size:13px;color:#8a8580;margin-top:3px;">Un seul exercice « Ouvert » à la fois. La clôture reporte les à-nouveaux.</div>
+        </div>
+        <button onClick="{{ openCreate }}" style="{{ createBtnStyle }}">+ Nouvel exercice</button>
+      </div>
+      <sc-if value="{{ hasOpen }}"><div style="font-size:12px;color:#8a6d3b;background:#fbf3e2;border:1px solid #f0e2c4;border-radius:8px;padding:9px 13px;margin-bottom:20px;">Un exercice ouvert existe déjà (2026) — clôturez-le avant d'en créer un nouveau.</div></sc-if>
+
+      <div style="background:#fff;border:1px solid #e5e2dd;border-radius:14px;overflow:hidden;">
+        <div style="display:grid;grid-template-columns:1.6fr 130px 1.3fr 1.3fr;background:#f3f1ee;padding:0 20px;">
+          <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Période</div>
+          <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Statut</div>
+          <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Résultat</div>
+          <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Actions</div>
+        </div>
+        <sc-for list="{{ exercices }}" as="ex" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:1.6fr 130px 1.3fr 1.3fr;padding:0 20px;border-bottom:1px solid #f0eeea;align-items:center;min-height:60px;">
+            <div style="font-size:14px;font-weight:700;color:#1c1e22;">{{ ex.periode }}</div>
+            <div><span style="{{ ex.statutBadge }}">{{ ex.statutLabel }}</span></div>
+            <div style="font-size:14px;font-weight:700;color:{{ ex.resultatColor }};font-variant-numeric:tabular-nums;">{{ ex.resultatLabel }}</div>
+            <div style="display:flex;gap:8px;">
+              <sc-if value="{{ ex.isOpen }}">
+                <button onClick="{{ ex.onCloturer }}" title="{{ ex.closeTitle }}" style="{{ ex.closeBtnStyle }}">Clôturer</button>
+              </sc-if>
+              <sc-if value="{{ ex.isClosed }}"><a href="#" style="font-size:13px;font-weight:700;">Consulter →</a></sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- ============ MODALE : NOUVEL EXERCICE ============ -->
+    <sc-if value="{{ createOpen }}">
+      <div style="position:absolute;inset:0;background:rgba(20,20,22,0.5);display:flex;align-items:center;justify-content:center;padding:32px;animation:fadeIn .15s ease;z-index:20;">
+        <div style="width:460px;background:#faf9f7;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,0.35);overflow:hidden;animation:popIn .25s cubic-bezier(0.16,1,0.3,1);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 26px;border-bottom:1px solid #e5e2dd;">
+            <div style="font-size:17px;font-weight:800;color:#1c1e22;">Nouvel exercice comptable</div>
+            <button onClick="{{ closeCreate }}" style="width:34px;height:34px;border-radius:9px;border:1px solid #e5e2dd;background:#fff;color:#8a8580;font-size:16px;cursor:pointer;">✕</button>
+          </div>
+          <div style="padding:22px 26px;display:flex;flex-direction:column;gap:16px;">
+            <div style="font-size:12px;color:#8a6d3b;background:#fbf3e2;border:1px solid #f0e2c4;border-radius:8px;padding:9px 13px;">Pour le <b>premier exercice</b> de l'entreprise, la durée peut dépasser 12 mois (jusqu'à 24 mois) — aucun contrôle bloquant sur la durée dans ce cas.</div>
+            <div style="display:flex;gap:12px;">
+              <div style="flex:1;display:flex;flex-direction:column;gap:7px;">
+                <label style="font-size:13px;font-weight:700;color:#1c1e22;">Date de début</label>
+                <input type="text" value="{{ nDebut }}" onInput="{{ onNDebut }}" placeholder="jj/mm/aaaa" style="height:44px;padding:0 14px;border-radius:9px;border:1px solid #d6d2cc;font-size:14px;color:#1c1e22;"></input>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:7px;">
+                <label style="font-size:13px;font-weight:700;color:#1c1e22;">Date de fin</label>
+                <input type="text" value="{{ nFin }}" onInput="{{ onNFin }}" placeholder="jj/mm/aaaa" style="height:44px;padding:0 14px;border-radius:9px;border:1px solid #d6d2cc;font-size:14px;color:#1c1e22;"></input>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:10px;padding:16px 26px;border-top:1px solid #e5e2dd;">
+            <button onClick="{{ closeCreate }}" style="height:42px;padding:0 18px;border-radius:9px;border:1px solid #d6d2cc;background:#fff;color:#1c1e22;font-size:14px;font-weight:700;cursor:pointer;">Annuler</button>
+            <button onClick="{{ confirmCreate }}" style="height:42px;padding:0 18px;border-radius:9px;border:none;background:#a1521f;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Créer l'exercice</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ MODALE : CLÔTURER ============ -->
+    <sc-if value="{{ closeOpen }}">
+      <div style="position:absolute;inset:0;background:rgba(20,20,22,0.5);display:flex;align-items:center;justify-content:center;padding:32px;animation:fadeIn .15s ease;z-index:20;">
+        <div style="width:480px;background:#faf9f7;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,0.35);overflow:hidden;animation:popIn .25s cubic-bezier(0.16,1,0.3,1);">
+          <sc-if value="{{ closeNotDone }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 26px;border-bottom:1px solid #e5e2dd;">
+              <div style="font-size:17px;font-weight:800;color:#1c1e22;">Clôturer l'exercice 2026 ?</div>
+              <button onClick="{{ closeClose }}" style="width:34px;height:34px;border-radius:9px;border:1px solid #e5e2dd;background:#fff;color:#8a8580;font-size:16px;cursor:pointer;">✕</button>
+            </div>
+            <div style="padding:22px 26px;display:flex;flex-direction:column;gap:14px;">
+              <div style="background:#fff;border:1px solid #e5e2dd;border-radius:11px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:#8a8580;">Écritures validées</span><span style="font-weight:700;color:#1c1e22;">214</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:#8a8580;">Résultat provisoire</span><span style="font-weight:700;color:#1f7a44;">+12 450 000 CDF</span></div>
+              </div>
+              <div style="background:#fbeeec;border:1px solid #ecc9c2;border-radius:11px;padding:14px 16px;font-size:13px;color:#b03b2e;line-height:1.5;">La clôture est bloquée : il reste <b>8 écriture(s) en brouillon</b> et <b>3 en attente de validation</b> sur cet exercice. Traitez-les avant de clôturer.</div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;padding:16px 26px;border-top:1px solid #e5e2dd;">
+              <button onClick="{{ closeClose }}" style="height:42px;padding:0 18px;border-radius:9px;border:1px solid #d6d2cc;background:#fff;color:#1c1e22;font-size:14px;font-weight:700;cursor:pointer;">Fermer</button>
+              <button disabled="{{ true }}" style="height:42px;padding:0 18px;border-radius:9px;border:none;background:#e2d7cd;color:#b3a99e;font-size:14px;font-weight:700;cursor:not-allowed;">Clôturer et reporter les à-nouveaux</button>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { createOpen: false, closeOpen: false, nDebut: '', nFin: '' };
+
+  data = [
+    { periode: '01/01/2024 – 31/12/2024', statut: 'CLOS', resultat: -2340000 },
+    { periode: '01/01/2025 – 31/12/2025', statut: 'CLOS', resultat: 18900000 },
+    { periode: '01/01/2026 – 31/12/2026', statut: 'OUVERT', resultat: null },
+  ];
+
+  badge(statut) {
+    return statut === 'OUVERT'
+      ? 'display:inline-block;padding:3px 11px;border-radius:999px;font-size:12px;font-weight:700;background:#e6f4ea;color:#1f7a44;border:1px solid #b7e0c4;'
+      : 'display:inline-block;padding:3px 11px;border-radius:999px;font-size:12px;font-weight:700;background:#eeecea;color:#8a8580;border:1px solid #dcd8d2;';
+  }
+
+  renderVals() {
+    const s = this.state;
+    const hasOpen = this.data.some(e => e.statut === 'OUVERT');
+    return {
+      hasOpen,
+      createBtnStyle: hasOpen
+        ? { height: 42, padding: '0 18px', borderRadius: 9, border: 'none', background: '#e2d7cd', color: '#b3a99e', fontSize: 14, fontWeight: 700, cursor: 'not-allowed', flexShrink: 0 }
+        : { height: 42, padding: '0 18px', borderRadius: 9, border: 'none', background: '#a1521f', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', flexShrink: 0 },
+      openCreate: () => { if (!hasOpen) this.setState({ createOpen: true }); },
+      closeCreate: () => this.setState({ createOpen: false }),
+      createOpen: s.createOpen,
+      nDebut: s.nDebut, onNDebut: e => this.setState({ nDebut: e.target.value }),
+      nFin: s.nFin, onNFin: e => this.setState({ nFin: e.target.value }),
+      confirmCreate: () => this.setState({ createOpen: false, nDebut: '', nFin: '' }),
+      closeOpen: s.closeOpen, closeNotDone: true,
+      closeClose: () => this.setState({ closeOpen: false }),
+      exercices: this.data.map(e => ({
+        periode: e.periode,
+        isOpen: e.statut === 'OUVERT', isClosed: e.statut === 'CLOS',
+        statutLabel: e.statut === 'OUVERT' ? 'Ouvert' : 'Clôturé', statutBadge: this.badge(e.statut),
+        resultatLabel: e.resultat === null ? '—' : `${e.resultat > 0 ? '+' : ''}${e.resultat.toLocaleString('fr-FR')} CDF`,
+        resultatColor: e.resultat === null ? '#8a8580' : (e.resultat >= 0 ? '#1f7a44' : '#b03b2e'),
+        closeTitle: 'Bloqué : brouillons ou écritures en attente sur cet exercice',
+        closeBtnStyle: 'height:34px;padding:0 14px;border-radius:8px;border:1px solid #d6d2cc;background:#fff;color:#1c1e22;font-size:13px;font-weight:700;cursor:pointer;',
+        onCloturer: () => this.setState({ closeOpen: true }),
+      })),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

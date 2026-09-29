@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body{margin:0;background:#e9e7e3;font-family:Helvetica,Arial,sans-serif;}
+    *{box-sizing:border-box;}
+    a{color:#b5652e;} a:hover{color:#8a4f24;}
+  </style>
+</helmet>
+
+<section style="padding:40px;display:flex;flex-direction:column;gap:16px;">
+  <div style="font-size:13px;font-weight:700;color:#666;letter-spacing:0.04em;">COMPTABILITÉ (§J) — Balance générale</div>
+
+  <div style="width:1200px;background:#faf9f7;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;border:1px solid #e5e2dd;">
+    <div style="padding:28px 32px 32px;">
+
+      <div style="font-size:13px;color:#8a8580;margin-bottom:6px;"><a href="./Comptano - Tableau de bord Comptabilite.dc.html">Comptabilité</a> / Balance générale</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;">
+        <div>
+          <div style="font-size:22px;font-weight:800;color:#1c1e22;">Balance générale</div>
+          <div style="font-size:13px;color:#8a8580;margin-top:3px;">Totaux et soldes par compte.</div>
+        </div>
+        <select style="height:42px;padding:0 14px;border-radius:9px;border:1px solid #d6d2cc;font-size:14px;color:#1c1e22;background:#fff;">
+          <option>Exercice 2026 (ouvert) — au 05/09/2026</option>
+          <option>Exercice 2025 (clôturé)</option>
+          <option>Exercice 2024 (clôturé)</option>
+        </select>
+      </div>
+
+      <div style="background:#fff;border:1px solid #e5e2dd;border-radius:14px;overflow:hidden;">
+        <div style="display:grid;grid-template-columns:100px 1.8fr 160px 160px 200px;background:#f3f1ee;padding:0 20px;">
+          <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Numéro</div>
+          <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Libellé compte</div>
+          <div style="height:44px;display:flex;align-items:center;justify-content:flex-end;font-size:12px;font-weight:700;color:#666;">Total débit</div>
+          <div style="height:44px;display:flex;align-items:center;justify-content:flex-end;font-size:12px;font-weight:700;color:#666;">Total crédit</div>
+          <div style="height:44px;display:flex;align-items:center;justify-content:flex-end;font-size:12px;font-weight:700;color:#666;">Solde</div>
+        </div>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+          <div style="display:grid;grid-template-columns:100px 1.8fr 160px 160px 200px;padding:0 20px;border-bottom:1px solid #f0eeea;align-items:center;min-height:48px;">
+            <div style="font-size:13px;font-weight:800;color:#1c1e22;font-variant-numeric:tabular-nums;">{{ r.numero }}</div>
+            <div style="font-size:13px;color:#1c1e22;">{{ r.libelle }}</div>
+            <div style="font-size:13px;font-variant-numeric:tabular-nums;text-align:right;color:var(--debit,#28241f);">{{ r.totalDebit }}</div>
+            <div style="font-size:13px;font-variant-numeric:tabular-nums;text-align:right;color:var(--credit,#a8672a);">{{ r.totalCredit }}</div>
+            <div style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;color:{{ r.soldeColor }};">{{ r.soldeLabel }}</div>
+          </div>
+        </sc-for>
+        <div style="display:grid;grid-template-columns:100px 1.8fr 160px 160px 200px;padding:0 20px;background:#f3f1ee;align-items:center;min-height:52px;">
+          <div></div>
+          <div style="font-size:13px;font-weight:800;color:#1c1e22;">Total</div>
+          <div style="font-size:14px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums;color:#1c1e22;">{{ grandTotalDebit }}</div>
+          <div style="font-size:14px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums;color:#1c1e22;">{{ grandTotalCredit }}</div>
+          <div></div>
+        </div>
+      </div>
+
+      <div style="{{ equilibreStyle }}">
+        <span>Σ soldes débiteurs = Σ soldes créditeurs</span>
+        <span style="font-weight:800;">{{ equilibreLabel }}</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  data = [
+    { numero:'101', libelle:'Capital social', debit:0, credit:5000000 },
+    { numero:'22', libelle:'Terrains', debit:1200000, credit:0 },
+    { numero:'31', libelle:'Marchandises', debit:840000, credit:0 },
+    { numero:'401', libelle:'Fournisseurs, dettes en compte', debit:450000, credit:535000 },
+    { numero:'411', libelle:'Clients', debit:610000, credit:0 },
+    { numero:'521', libelle:'Banques locales', debit:2400000, credit:450000 },
+    { numero:'571', libelle:'Caisse siège social', debit:96000, credit:0 },
+    { numero:'601', libelle:'Achats de marchandises', debit:0, credit:0 },
+    { numero:'62', libelle:'Services extérieurs A', debit:85000, credit:0 },
+    { numero:'66', libelle:'Charges de personnel', debit:320000, credit:0 },
+    { numero:'701', libelle:'Ventes de marchandises', debit:0, credit:610000 },
+  ];
+  fmt(n){ return n===0 ? '—' : n.toLocaleString('fr-FR'); }
+
+  renderVals(){
+    let td = 0, tc = 0, sd = 0, sc = 0;
+    const rows = this.data.map(r => {
+      td += r.debit; tc += r.credit;
+      const solde = r.debit - r.credit;
+      if (solde >= 0) sd += solde; else sc += -solde;
+      return {
+        numero: r.numero, libelle: r.libelle,
+        totalDebit: this.fmt(r.debit), totalCredit: this.fmt(r.credit),
+        soldeLabel: this.fmt(Math.abs(solde)), soldeColor: solde === 0 ? '#8a8580' : (solde > 0 ? 'var(--debit,#28241f)' : 'var(--credit,#a8672a)'),
+      };
+    });
+    const equilibre = Math.round((sd - sc) * 100) / 100 === 0;
+    return {
+      rows, grandTotalDebit: this.fmt(td), grandTotalCredit: this.fmt(tc),
+      equilibreStyle: `margin-top:14px;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-radius:12px;font-size:14px;background:${equilibre ? '#e6f4ea' : '#fbf3ec'};color:${equilibre ? '#1f7a44' : '#b5652e'};border:1px solid ${equilibre ? '#b7e0c4' : '#ecd3b6'};`,
+      equilibreLabel: equilibre ? `✓ Équilibrée — ${this.fmt(sd)} = ${this.fmt(sc)}` : `Écart de ${this.fmt(Math.abs(sd - sc))}`,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

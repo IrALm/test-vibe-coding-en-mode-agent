@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body{margin:0;background:#e9e7e3;font-family:Helvetica,Arial,sans-serif;}
+    *{box-sizing:border-box;}
+    a{color:#b5652e;} a:hover{color:#8a4f24;}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  </style>
+</helmet>
+
+<section style="padding:40px;display:flex;flex-direction:column;gap:16px;">
+  <div style="font-size:13px;font-weight:700;color:#666;letter-spacing:0.04em;">COMPTABILITÉ (§G) — File d'attente de validation · visible uniquement ADMIN / ADMIN_FINANCIER</div>
+
+  <div style="width:1200px;background:#faf9f7;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;border:1px solid #e5e2dd;">
+    <div style="padding:28px 32px 32px;">
+
+      <div style="font-size:13px;color:#8a8580;margin-bottom:6px;"><a href="./Comptano - Tableau de bord Comptabilite.dc.html">Comptabilité</a> / Validation</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;"><div style="font-size:22px;font-weight:800;color:#1c1e22;">File d'attente de validation</div><span style="font-size:10px;font-weight:800;color:#8a4f24;background:#f2ddc9;padding:2px 8px;border-radius:999px;">ADMIN / ADMIN_FINANCIER</span></div>
+          <div style="font-size:13px;color:#8a8580;margin-top:3px;">Écritures brouillon équilibrées, triées par date de soumission.</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;">
+        <div style="background:#fbf3ec;border:1px solid #ecd3b6;border-radius:12px;padding:16px 18px;">
+          <div style="font-size:11px;font-weight:600;color:#8a4f24;margin-bottom:6px;">En attente</div>
+          <div style="font-size:28px;font-weight:800;color:#b5652e;font-variant-numeric:tabular-nums;">{{ kpiPending }}</div>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e2dd;border-radius:12px;padding:16px 18px;">
+          <div style="font-size:11px;font-weight:600;color:#666;margin-bottom:6px;">Validées aujourd'hui</div>
+          <div style="font-size:28px;font-weight:800;color:#1c1e22;font-variant-numeric:tabular-nums;">{{ kpiToday }}</div>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #e5e2dd;border-radius:14px;overflow:hidden;">
+        <div style="display:grid;grid-template-columns:120px 1fr 150px 1fr 140px;background:#f3f1ee;padding:0 20px;">
+          <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Soumise le</div>
+          <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Référence / libellé</div>
+          <div style="height:44px;display:flex;align-items:center;justify-content:flex-end;font-size:12px;font-weight:700;color:#666;">Montant</div>
+          <div style="height:44px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#666;">Soumise par</div>
+          <div style="height:44px;"></div>
+        </div>
+        <sc-for list="{{ visible }}" as="e" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:120px 1fr 150px 1fr 140px;padding:0 20px;border-bottom:1px solid #f0eeea;align-items:center;min-height:58px;{{ e.rowFade }}">
+            <div style="font-size:13px;color:#1c1e22;">{{ e.date }}</div>
+            <div style="display:flex;flex-direction:column;gap:2px;padding-right:12px;"><span style="font-size:14px;font-weight:700;color:#1c1e22;">{{ e.libelle }}</span><span style="font-size:12px;color:#8a8580;">{{ e.reference }}</span></div>
+            <div style="font-size:14px;font-weight:700;color:#1c1e22;text-align:right;font-variant-numeric:tabular-nums;">{{ e.montant }}</div>
+            <div style="font-size:13px;color:#666;">{{ e.soumisePar }}</div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+              <a href="#" style="font-size:13px;font-weight:700;">Détail</a>
+              <button onClick="{{ e.onValidate }}" style="{{ e.validateBtnStyle }}">✓ Valider</button>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noneLeft }}"><div style="padding:44px;text-align:center;font-size:14px;color:#888;">Aucune écriture en attente de validation.</div></sc-if>
+      </div>
+
+      <sc-if value="{{ toastVisible }}">
+        <div style="position:fixed;bottom:32px;right:32px;background:#1c1e22;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.3);animation:fadeInUp .2s ease;">✓ Écriture validée.</div>
+      </sc-if>
+    </div>
+  </div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  data = [
+    { id:'p1', date:'05/09/2026', libelle:'Achat fournitures bureau', reference:'Facture n°2231', montant:85000, soumisePar:'Alice Mombeti' },
+    { id:'p2', date:'04/09/2026', libelle:'Salaire — Moïse Aganze', reference:'PAIE-08-2026', montant:320000, soumisePar:'John Doe' },
+    { id:'p3', date:'03/09/2026', libelle:'Cotisations CNSS septembre', reference:'CNSS-09', montant:96000, soumisePar:'Alice Mombeti' },
+  ];
+  state = { validated: {}, validatedToday: 0, toastVisible: false };
+  fmt(n){ return n.toLocaleString('fr-FR'); }
+
+  renderVals(){
+    const s = this.state;
+    const remaining = this.data.filter(e => !s.validated[e.id]);
+    return {
+      kpiPending: remaining.length,
+      kpiToday: s.validatedToday,
+      noneLeft: remaining.length === 0,
+      toastVisible: s.toastVisible,
+      visible: remaining.map(e => ({
+        ...e, montant: this.fmt(e.montant), rowFade: '',
+        validateBtnStyle: 'height:32px;padding:0 13px;border-radius:8px;border:none;background:#1f9d55;color:#fff;font-size:12px;font-weight:700;cursor:pointer;',
+        onValidate: () => this.validate(e.id),
+      })),
+    };
+  }
+
+  validate(id){
+    this.setState({ validated: { ...this.state.validated, [id]: true }, validatedToday: this.state.validatedToday + 1, toastVisible: true });
+    setTimeout(() => this.setState({ toastVisible: false }), 1800);
+  }
+}
+
+</script>
+</body>
+</html>
